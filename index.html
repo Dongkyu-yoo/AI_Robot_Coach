@@ -12,10 +12,10 @@
   <div id="loginScreen" class="login-screen">
     <section class="login-card">
       <div class="login-hero">
-        <p class="eyebrow">Robot Lab Prototype</p>
-        <h1>생각을 키우는<br />AI 코치 활용 로봇 수업 자료</h1>
-        <p>학생은 실습 중 질문하며 사고 과정을 확장하고, 교사는 질문과 엔지니어링 노트를 확인합니다.</p>
-        <div class="notice">현재 버전은 실제 AI API 없이 공통 AI 어시스턴트 모듈로 응답합니다.</div>
+        <p class="eyebrow">생각을 키우는 AI 코치 활용 로봇 수업 자료</p>
+        <h1></br>ROBOT LAB</br></br></h1>
+        <p>AI 코치를 통해 학생은 실습 중 질문을 통해 사고 과정을 확장하고, 교사는 학생들의 사고 과정을 실시간으로 확인합니다.</br></br></p>
+        <div class="notice">AI 코치는 학생들에게 정답을 알려주는 것이 아니라 사고를 확장할 수 있는 질문을 던져줍니다.</div>
       </div>
       <form id="loginForm" class="login-form">
         <h2>로그인</h2>
@@ -35,21 +35,29 @@
 
   <div id="appScreen" class="app-shell hidden">
     <aside class="sidebar">
-      <div class="brand">AI 로봇 코치<br />수업 플랫폼</div>
-      <div class="sub">Arduino · Robot Arm · Mecanum · Engineering Note</div>
+      <div class="brand">AI 로봇 코치<br /></div>
+      <div class="sub">· Arduino</br> · Robot Arm</br> · Mecanum</br> · Engineering Note</div>
 
       <nav class="nav" aria-label="주 메뉴">
         <button class="active" data-route="dashboard" type="button">대시보드</button>
         <button data-route="arduino" type="button">아두이노 실습실</button>
+        <div id="arduinoLessonNav" class="nav-subgroup arduino-lesson-nav hidden" aria-label="아두이노 실습 하위 메뉴"></div>
         <button data-route="robotarm" type="button">로봇팔 실습실</button>
-        <div class="nav-subgroup" aria-label="로봇팔 실습실 하위 메뉴">
+        <div id="robotarmLessonNav" class="nav-subgroup hidden" aria-label="로봇팔 실습실 하위 메뉴">
           <button data-route="robotarm-2d" type="button">2D 실습</button>
           <button data-route="robotarm-3d" type="button">3D 실습</button>
           <button data-route="robotarm-pickup" type="button">물건 옮기기</button>
         </div>
         <button data-route="mecanum" type="button">메카넘 실습실</button>
+        <div id="mecanumLessonNav" class="nav-subgroup hidden" aria-label="메카넘 실습실 하위 메뉴">
+          <button data-route="mecanum-motion" type="button">동작 구현하기</button>
+          <button data-route="mecanum-scourse" type="button">자율주행(S자)</button>
+          <button data-route="mecanum-bluetooth" type="button">블루투스 조종</button>
+        </div>
         <button data-route="engineering-note" type="button">엔지니어링 노트</button>
-        <button data-route="teacher" type="button">교사용 관리</button>
+        <a class="nav-link-button arduino-cloud-link" href="https://app.arduino.cc/" target="_blank" rel="noopener noreferrer">아두이노 클라우드 열기</a>
+        <button data-route="teacher" type="button">교사용 대시보드</button>
+        <button data-route="admin" type="button">관리자 메뉴</button>
       </nav>
 
       <div class="userbox">

@@ -1,16 +1,18 @@
 export const simulator = {
-  render() {
+  render(lessonData) {
+    const pin = lessonData.allowedPins[0] || 13;
     return `
-      <div class="mini-board">UNO<br />D13</div>
+      <div class="mini-board">UNO<br />D${pin}</div>
       <div class="sim-wire"></div>
-      <div class="sim-led yellow" data-led="13" aria-label="13번 핀 LED"></div>
-      <div class="simulation-label">D13 HIGH 신호가 들어오면 LED가 켜집니다.</div>
+      <div class="sim-led yellow" data-led="${pin}" aria-label="${pin}번 핀 LED"></div>
+      <div class="simulation-label">D${pin} HIGH 신호가 들어오면 LED가 켜집니다.</div>
     `;
   },
 
-  run(code, stage) {
-    const led = stage.querySelector('[data-led="13"]');
-    const canLight = /digitalWrite\s*\(\s*13\s*,\s*HIGH\s*\)\s*;/.test(code);
+  run(code, stage, lessonData) {
+    const pin = lessonData.allowedPins[0] || 13;
+    const led = stage.querySelector(`[data-led="${pin}"]`);
+    const canLight = new RegExp(`digitalWrite\\s*\\(\\s*${pin}\\s*,\\s*HIGH\\s*\\)\\s*;`).test(code);
     led.classList.toggle("on", canLight);
 
     return {
@@ -22,6 +24,6 @@ export const simulator = {
   },
 
   reset(stage) {
-    stage.querySelector('[data-led="13"]')?.classList.remove("on");
+    stage.querySelector(".sim-led")?.classList.remove("on");
   }
 };

@@ -1,9 +1,9 @@
-import { renderNoteEditor, mountNoteEditor } from "./noteEditor.js";
+import { renderEngineeringNoteUI, mountEngineeringNoteUI } from "./noteUI.js";
 
 export function renderEngineeringNote() {
-  return renderNoteEditor();
+  return renderEngineeringNoteUI();
 }
 
 export function mountEngineeringNote(root) {
-  mountNoteEditor(root);
+  mountEngineeringNoteUI(root);
 }

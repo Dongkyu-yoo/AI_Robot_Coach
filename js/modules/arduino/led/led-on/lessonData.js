@@ -3,6 +3,7 @@ export const lessonData = {
   moduleKey: "arduino",
   unitTitle: "1단원 LED",
   title: "LED 켜기",
+  aiProvider: "gpt",
   subtitle: "디지털 출력으로 13번 핀에 연결한 LED를 켭니다.",
   badge: "Digital Output",
   goal: "D13 핀을 출력으로 설정하고 HIGH 신호를 보내 LED가 켜지는 원리를 이해합니다.",

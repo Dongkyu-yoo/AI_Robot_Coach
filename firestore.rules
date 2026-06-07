@@ -1,0 +1,51 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isTeacher() {
+      return signedIn()
+        && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == "teacher";
+    }
+
+    match /profiles/{uid} {
+      allow read: if isOwner(uid) || isTeacher();
+      allow create: if isOwner(uid)
+        && request.resource.data.role == "student";
+      allow update: if isOwner(uid)
+        && request.resource.data.role == resource.data.role;
+      allow delete: if false;
+    }
+
+    match /engineeringNotes/{noteId} {
+      allow read: if isOwner(resource.data.userId) || isTeacher();
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+    }
+
+    match /aiQuestions/{questionId} {
+      allow read: if isOwner(resource.data.userId) || isTeacher();
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if false;
+    }
+
+    match /progress/{progressId} {
+      allow read: if isOwner(resource.data.userId) || isTeacher();
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId);
+    }
+
+    match /pdfSubmissions/{userId} {
+      allow read: if isOwner(userId) || isTeacher();
+      allow create, update: if isOwner(userId);
+      allow delete: if false;
+    }
+  }
+}

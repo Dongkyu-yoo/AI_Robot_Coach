@@ -1,0 +1,11 @@
+.env
+.firebase/
+firebase-service-account.json
+functions/.env
+functions/.env.*
+!functions/.env.example
+api-settings.json
+node_modules/
+functions/node_modules/
+.DS_Store
+Thumbs.db

@@ -39,7 +39,7 @@
 .eyebrow {
   margin: 0 0 18px;
   color: #c7d2fe;
-  font-size: 13px;
+  font-size: 20px;
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -60,6 +60,10 @@
 }
 
 .sidebar {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
   color: white;
   padding: 22px 18px;
   background: linear-gradient(180deg, #111827, #1e1b4b);
@@ -67,7 +71,7 @@
 
 .brand {
   margin-bottom: 8px;
-  font-size: 20px;
+  font-size: 30px;
   font-weight: 900;
   line-height: 1.35;
 }
@@ -85,6 +89,7 @@
 }
 
 .nav button,
+.nav-link-button,
 .nav-subgroup button {
   width: 100%;
   padding: 13px 12px;
@@ -94,6 +99,18 @@
   background: rgba(255, 255, 255, 0.06);
   text-align: left;
   font-size: 14px;
+}
+
+.nav-link-button {
+  display: block;
+  text-decoration: none;
+}
+
+.arduino-cloud-link {
+  border-color: rgba(34, 211, 238, 0.36);
+  color: #cffafe;
+  background: rgba(8, 145, 178, 0.22);
+  font-weight: 800;
 }
 
 .nav button.active,
@@ -116,6 +133,37 @@
   color: #e0e7ff;
   background: rgba(255, 255, 255, 0.04);
   font-size: 13px;
+}
+
+.arduino-lesson-nav {
+  max-height: 48vh;
+  overflow-y: auto;
+  margin-bottom: 8px;
+  padding-right: 4px;
+}
+
+.nav-lesson-unit {
+  display: grid;
+  gap: 6px;
+}
+
+.nav-lesson-unit + .nav-lesson-unit {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(199, 210, 254, 0.22);
+}
+
+.nav-lesson-title {
+  margin: 4px 0 2px;
+  color: #a5b4fc;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.arduino-lesson-nav button {
+  padding: 8px 9px;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .userbox {
@@ -197,6 +245,11 @@
     grid-template-columns: 1fr;
   }
 
+  .sidebar {
+    position: static;
+    max-height: none;
+  }
+
   .nav {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -207,6 +260,18 @@
     margin: -2px 0 4px;
     padding-left: 0;
     border-left: 0;
+  }
+
+  .arduino-lesson-nav {
+    max-height: none;
+  }
+
+  .arduino-lesson-nav .nav-lesson-unit {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .arduino-lesson-nav .nav-lesson-title {
+    grid-column: 1 / -1;
   }
 
   .span-4,
@@ -248,6 +313,10 @@
 
   .nav,
   .nav-subgroup {
+    grid-template-columns: 1fr;
+  }
+
+  .arduino-lesson-nav .nav-lesson-unit {
     grid-template-columns: 1fr;
   }
 }

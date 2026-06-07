@@ -1,0 +1,59 @@
+name: Deploy Firebase
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: firebase-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Hosting, Functions, and Firestore rules
+    runs-on: ubuntu-latest
+
+    env:
+      FIREBASE_PROJECT_ID: robot-ai-class
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-service-account.json
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Write Firebase service account
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ROBOT_AI_CLASS }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT_JSON" ]; then
+            echo "Missing GitHub secret: FIREBASE_SERVICE_ACCOUNT_ROBOT_AI_CLASS"
+            exit 1
+          fi
+          node -e "require('fs').writeFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, process.env.FIREBASE_SERVICE_ACCOUNT_JSON)"
+
+      - name: Write Functions environment
+        run: |
+          cat > functions/.env <<'EOF'
+          OPENAI_MODEL=${{ vars.OPENAI_MODEL || 'gpt-5.1' }}
+          OPENAI_MAX_OUTPUT_TOKENS=${{ vars.OPENAI_MAX_OUTPUT_TOKENS || '500' }}
+          OPENAI_TEACHER_MAX_OUTPUT_TOKENS=${{ vars.OPENAI_TEACHER_MAX_OUTPUT_TOKENS || '900' }}
+          CACHE_TTL_MS=${{ vars.CACHE_TTL_MS || '1800000' }}
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD || '1234' }}
+          EOF
+
+      - name: Install Functions dependencies
+        working-directory: functions
+        run: npm ci
+
+      - name: Deploy to Firebase
+        run: npx --yes firebase-tools deploy --only functions,hosting,firestore:rules --project "$FIREBASE_PROJECT_ID" --force

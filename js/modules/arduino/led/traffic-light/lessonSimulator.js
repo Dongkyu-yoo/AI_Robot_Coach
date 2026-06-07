@@ -1,20 +1,22 @@
 export const simulator = {
-  render() {
+  render(lessonData) {
+    const [redPin, yellowPin, greenPin] = lessonData.allowedPins;
     return `
-      <div class="mini-board">UNO<br />D13/D12/D11</div>
+      <div class="mini-board">UNO<br />D${redPin}/D${yellowPin}/D${greenPin}</div>
       <div class="sim-wire"></div>
       <div class="traffic-stack">
-        <div class="sim-led red" data-led="13" aria-label="빨강 LED"></div>
-        <div class="sim-led yellow" data-led="12" aria-label="노랑 LED"></div>
-        <div class="sim-led green" data-led="11" aria-label="초록 LED"></div>
+        <div class="sim-led red" data-led="${redPin}" aria-label="빨강 LED"></div>
+        <div class="sim-led yellow" data-led="${yellowPin}" aria-label="노랑 LED"></div>
+        <div class="sim-led green" data-led="${greenPin}" aria-label="초록 LED"></div>
       </div>
       <div class="simulation-label">빨강 → 초록 → 노랑 순서로 LED가 켜지는지 확인합니다.</div>
     `;
   },
 
-  run(code, stage) {
-    const hasSequence = [13, 12, 11].every((pin) => new RegExp(`digitalWrite\\s*\\(\\s*${pin}\\s*,\\s*HIGH\\s*\\)\\s*;`).test(code))
-      && [13, 12, 11].some((pin) => new RegExp(`digitalWrite\\s*\\(\\s*${pin}\\s*,\\s*LOW\\s*\\)\\s*;`).test(code))
+  run(code, stage, lessonData) {
+    const pins = lessonData.allowedPins;
+    const hasSequence = pins.every((pin) => new RegExp(`digitalWrite\\s*\\(\\s*${pin}\\s*,\\s*HIGH\\s*\\)\\s*;`).test(code))
+      && pins.some((pin) => new RegExp(`digitalWrite\\s*\\(\\s*${pin}\\s*,\\s*LOW\\s*\\)\\s*;`).test(code))
       && /delay\s*\(\s*\d+\s*\)\s*;/.test(code);
 
     stage.querySelectorAll(".sim-led").forEach((led) => {
