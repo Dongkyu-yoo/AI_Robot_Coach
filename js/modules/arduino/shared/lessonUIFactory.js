@@ -5,6 +5,7 @@ import { aiAssistant } from "../../../core/aiAssistant.js";
 import { gptClient } from "../../../core/gptClient.js";
 import { setFormattedAiMessage } from "../../../core/messageFormat.js";
 import { createPracticeLessonData } from "./practiceConfig.js";
+import { bindRichSimulationControls, showSimulationError } from "./basicSimulator.js";
 
 export function createArduinoLesson({ lessonData, simulator }) {
   return {
@@ -68,7 +69,7 @@ export function createArduinoLesson({ lessonData, simulator }) {
             <p class="muted">회로 요약: ${activeLessonData.circuit.summary}</p>
           </article>
 
-          <article class="card span-8 arduino-editor-card">
+          <article class="card span-7 arduino-editor-card">
             <div class="editor-head">
               <h2>아두이노 코드 편집기</h2>
               <div class="button-row">
@@ -90,7 +91,7 @@ export function createArduinoLesson({ lessonData, simulator }) {
             <div data-role="feedback" class="compile-log">코드를 작성한 뒤 버튼을 누르면 AI 튜터가 질문형 피드백을 제공합니다.</div>
           </article>
 
-          <div class="arduino-side span-4">
+          <div class="arduino-side span-5">
             <article class="card">
               <h2>가상 시뮬레이션</h2>
               <div data-role="simulation-stage" class="simulation-stage ${activeLessonData.simulation.type}">
@@ -119,6 +120,7 @@ export function createArduinoLesson({ lessonData, simulator }) {
       const simulationStage = root.querySelector('[data-role="simulation-stage"]');
       const referencePanel = root.querySelector('[data-role="reference-panel"]');
       setupCircuitImage(root);
+      bindRichSimulationControls(simulationStage);
 
       codeEditor.addEventListener("input", () => saveLessonState(root, codeEditor.value));
       root.querySelector('[data-role="toggle-example"]').addEventListener("click", () => {
@@ -154,6 +156,7 @@ export function createArduinoLesson({ lessonData, simulator }) {
         if (!compileResult.passed) {
           setFeedback(feedback, compileResult.html, "warn");
           simulator.reset(simulationStage);
+          showSimulationError(simulationStage, "컴파일 조건을 먼저 해결하면 회로가 실행됩니다.");
           return;
         }
         const result = simulator.run(codeEditor.value, simulationStage, activeLessonData);

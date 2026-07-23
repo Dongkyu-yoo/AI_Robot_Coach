@@ -550,6 +550,7 @@ void loop() {
     },
     simulation: {
       ...lessonData.simulation,
+      pin: pinMap[lessonData.simulation?.pin] ?? lessonData.simulation?.pin,
       requiredPatterns: mapPatternStrings(lessonData.simulation?.requiredPatterns || [], pinMap)
     },
     practice: {
