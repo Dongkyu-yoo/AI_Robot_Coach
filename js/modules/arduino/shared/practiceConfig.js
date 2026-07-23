@@ -130,64 +130,153 @@ void loop() {
     successMessage: "D10 관절 서보를 안전한 각도 범위에서 움직이는 응용 과제를 해결했습니다."
   },
   "arduino-dc-spin": {
-    prompt: "참고 예제는 D5/D6으로 DC모터를 회전시킵니다. 이번 과제는 모터드라이버 입력을 D3/D4에 연결했다고 가정하고 모터를 회전시켜보세요.",
-    pinMap: { 5: 3, 6: 4 },
-    starterCode: `void setup() {
-  // TODO: D3, D4를 출력으로 설정하세요.
+    prompt: "참고 예제는 M1 모터를 속도 150으로 2초간 회전시킵니다. 이번 미션은 속도 180으로 3초간 회전시킨 뒤 RELEASE로 정지하세요.",
+    referenceTitle: "참고 예제: M1 모터 2초 회전",
+    pinMap: {},
+    starterCode: `#include <AFMotor.h>
+
+AF_DCMotor motor(1);
+
+void setup() {
+  // TODO: M1 모터의 속도를 180으로 설정하세요.
 }
 
 void loop() {
-  // TODO: 한 핀은 HIGH, 다른 핀은 LOW로 만들어 모터가 회전하게 하세요.
+  // TODO: M1 모터를 정회전시키세요.
+  // TODO: 3초 후 RELEASE로 정지시키세요.
 }`,
-    successMessage: "D3/D4 모터드라이버 입력으로 DC모터를 회전시키는 응용 과제를 해결했습니다."
+    criteria: [
+      "AF_DCMotor motor(1)로 M1 모터를 선택합니다.",
+      "속도 180으로 3초간 FORWARD 회전합니다.",
+      "동작 후 RELEASE로 모터를 정지합니다."
+    ],
+    successMessage: "M1 모터를 속도 180으로 3초간 회전시킨 뒤 안전하게 정지했습니다."
   },
   "arduino-dc-direction": {
-    prompt: "참고 예제는 D5/D6 조합으로 정회전과 역회전을 만듭니다. 이번 과제는 D3/D4 입력으로 방향 전환 코드를 완성하세요.",
-    pinMap: { 5: 3, 6: 4 },
-    starterCode: `void setup() {
-  // TODO: D3, D4를 출력으로 설정하세요.
+    prompt: "참고 예제의 방향 전환 시간을 바꾸어, 속도 180으로 정회전 2초 → 정지 1초 → 역회전 2초 → 정지 순서를 완성하세요.",
+    referenceTitle: "참고 예제: M1 정·역회전",
+    pinMap: {},
+    starterCode: `#include <AFMotor.h>
+
+AF_DCMotor motor(1);
+
+void setup() {
+  // TODO: M1 모터의 속도를 180으로 설정하세요.
 }
 
 void loop() {
-  // TODO: D3/D4의 HIGH, LOW 조합을 바꿔 정회전과 역회전을 만드세요.
+  // TODO: 정회전 2초 후 RELEASE로 1초간 정지하세요.
+  // TODO: 역회전 2초 후 RELEASE로 정지하세요.
 }`,
-    successMessage: "D3/D4 입력 조합으로 방향 전환 응용 과제를 해결했습니다."
+    criteria: [
+      "FORWARD와 BACKWARD 사이에 RELEASE를 실행합니다.",
+      "정회전과 역회전은 각각 2초간 관찰합니다.",
+      "방향을 바꾸기 전에 1초 정지 구간을 둡니다."
+    ],
+    successMessage: "정지 구간을 포함한 M1 모터의 안전한 정·역회전 순서를 완성했습니다."
   },
   "arduino-dc-speed": {
-    prompt: "참고 예제는 D5 PWM으로 속도를 조절합니다. 이번 과제는 D3 PWM과 D4 방향 입력으로 느린 속도와 빠른 속도를 비교해보세요.",
-    pinMap: { 5: 3, 6: 4 },
-    starterCode: `void setup() {
-  // TODO: D3, D4를 출력으로 설정하세요.
+    prompt: "참고 예제의 두 속도 대신 M1 모터를 속도 80, 150, 220으로 각각 2초씩 회전시켜 세 단계의 차이를 비교하세요.",
+    referenceTitle: "참고 예제: 두 단계 속도 비교",
+    pinMap: {},
+    starterCode: `#include <AFMotor.h>
+
+AF_DCMotor motor(1);
+
+void setup() {
 }
 
 void loop() {
-  // TODO: D4로 방향 기준을 만들고, D3 analogWrite 값 두 개를 비교하세요.
+  // TODO: 속도 80으로 2초간 회전하세요.
+  // TODO: 속도 150으로 2초간 회전하세요.
+  // TODO: 속도 220으로 2초간 회전하세요.
+  // TODO: 비교가 끝나면 RELEASE로 정지하세요.
 }`,
-    successMessage: "D3 PWM으로 DC모터 속도를 조절하는 응용 과제를 해결했습니다."
+    criteria: [
+      "속도값 이외의 방향과 관찰 시간을 같게 유지합니다.",
+      "속도 80, 150, 220을 각각 2초씩 비교합니다.",
+      "실험이 끝나면 RELEASE로 정지합니다."
+    ],
+    successMessage: "M1 모터의 세 단계 속도를 같은 조건에서 비교했습니다."
   },
   "arduino-two-wheel-drive": {
-    prompt: "참고 예제는 D5/D6, D9/D10으로 2륜 주행을 만듭니다. 이번 과제는 D2/D3, D4/D7 조합으로 전진과 후진을 구현하세요.",
-    pinMap: { 5: 2, 6: 3, 9: 4, 10: 7 },
-    starterCode: `void setup() {
-  // TODO: 왼쪽 모터 D2/D3, 오른쪽 모터 D4/D7을 출력으로 설정하세요.
+    prompt: "M1 왼쪽 모터와 M2 오른쪽 모터를 속도 180으로 설정하고, 2초 전진 → 1초 정지 → 2초 후진 → 정지 순서를 완성하세요.",
+    referenceTitle: "참고 예제: 2륜 1초 전진·후진",
+    pinMap: {},
+    starterCode: `#include <AFMotor.h>
+
+AF_DCMotor leftMotor(1);
+AF_DCMotor rightMotor(2);
+
+void setMotorSpeed(int speedValue) {
+  leftMotor.setSpeed(speedValue);
+  rightMotor.setSpeed(speedValue);
+}
+
+void goForward() {
+  // TODO: 실제 장착 방향에 맞춰 좌우 모터의 전진 방향을 지정하세요.
+}
+
+void goBackward() {
+  // TODO: 좌우 모터가 전진과 반대 방향으로 돌게 하세요.
+}
+
+void stopMotors() {
+  // TODO: 두 모터를 RELEASE로 정지하세요.
+}
+
+void setup() {
+  // TODO: 두 모터 속도를 180으로 설정하세요.
 }
 
 void loop() {
-  // TODO: 두 바퀴가 같은 방향으로 전진한 뒤, 반대 조합으로 후진하게 하세요.
+  // TODO: 2초 전진 → 1초 정지 → 2초 후진 → 정지 순서를 작성하세요.
 }`,
-    successMessage: "새 핀 조합으로 2륜 전진/후진 응용 과제를 해결했습니다."
+    criteria: [
+      "왼쪽 모터는 M1, 오른쪽 모터는 M2 객체로 선언합니다.",
+      "goForward(), goBackward(), stopMotors() 함수를 완성합니다.",
+      "속도 180으로 2초 전진·1초 정지·2초 후진합니다."
+    ],
+    successMessage: "M1·M2를 이용한 2륜 자동차의 전진·정지·후진 순서를 완성했습니다."
   },
   "arduino-two-wheel-turn": {
-    prompt: "참고 예제는 좌우 모터 조합으로 회전합니다. 이번 과제는 D2/D3, D4/D7 조합으로 좌회전과 우회전을 구현하세요.",
-    pinMap: { 5: 2, 6: 3, 9: 4, 10: 7 },
-    starterCode: `void setup() {
-  // TODO: 왼쪽 모터 D2/D3, 오른쪽 모터 D4/D7을 출력으로 설정하세요.
+    prompt: "속도 180으로 1.5초 전진 → 0.7초 좌회전 → 1.5초 전진 → 0.7초 우회전 → 정지하는 경로를 완성하세요.",
+    referenceTitle: "참고 예제: 기본 좌·우 회전",
+    pinMap: {},
+    starterCode: `#include <AFMotor.h>
+
+AF_DCMotor leftMotor(1);
+AF_DCMotor rightMotor(2);
+
+void goForward() {
+  // TODO: 두 모터를 실제 전진 방향으로 회전시키세요.
+}
+
+void turnLeft() {
+  // TODO: 왼쪽 모터는 RELEASE, 오른쪽 모터는 전진시키세요.
+}
+
+void turnRight() {
+  // TODO: 왼쪽 모터는 전진, 오른쪽 모터는 RELEASE로 두세요.
+}
+
+void stopMotors() {
+  // TODO: 두 모터를 RELEASE로 정지하세요.
+}
+
+void setup() {
+  // TODO: 왼쪽과 오른쪽 모터 속도를 각각 180으로 설정하세요.
 }
 
 void loop() {
-  // TODO: 좌우 모터 조합을 다르게 만들어 좌회전과 우회전을 비교하세요.
+  // TODO: 전진 → 좌회전 → 전진 → 우회전 → 정지 경로를 시간 조건에 맞게 작성하세요.
 }`,
-    successMessage: "새 핀 조합으로 좌회전/우회전 응용 과제를 해결했습니다."
+    criteria: [
+      "goForward(), turnLeft(), turnRight(), stopMotors()를 완성합니다.",
+      "전진 시간은 1.5초, 좌·우 회전 시간은 각각 0.7초로 설정합니다.",
+      "한쪽 모터를 RELEASE하는 차동 구동으로 회전합니다."
+    ],
+    successMessage: "M1·M2 차동 구동으로 전진–좌회전–전진–우회전 경로를 완성했습니다."
   },
   "arduino-mecanum-basic": {
     prompt: "참고 예제는 D2부터 D9까지 4개 모터 입력을 사용합니다. 이번 과제는 D3부터 D10까지로 한 칸씩 옮겨 4모터 전진 패턴을 완성하세요.",
@@ -464,6 +553,7 @@ void loop() {
       requiredPatterns: mapPatternStrings(lessonData.simulation?.requiredPatterns || [], pinMap)
     },
     practice: {
+      ...(lessonData.practice || {}),
       prompt: rule.prompt,
       referenceTitle: rule.referenceTitle || "참고 예제 코드",
       criteria: successCriteria
@@ -508,6 +598,13 @@ function getDeviceGuidance(lessonData) {
     circuitChecks: ["전원, GND, 신호선과 attach() 핀 번호를 비교하세요."],
     commonMistakes: ["0~180도 범위를 벗어난 각도", "신호선 핀 불일치"],
     coachingHints: ["attach()와 write()가 각각 어떤 역할인지 설명해보세요."]
+  };
+  if (/^arduino-(dc-spin|dc-direction|dc-speed|two-wheel-drive|two-wheel-turn)$/.test(lessonData.id || "")) return {
+    deviceName: "DC모터와 모터 쉴드",
+    expectedObservation: "M1·M2 모터가 미션에서 정한 방향·속도·시간 순서로 동작합니다.",
+    circuitChecks: ["모터의 M1·M2 단자, EXT_PWR 배터리 극성, 전원 스위치와 모터 쉴드 결합 상태를 확인하세요."],
+    commonMistakes: ["AFMotor 라이브러리 누락", "M1·M2 번호 혼동", "RELEASE 누락", "속도값 0~255 범위 오류"],
+    coachingHints: ["setSpeed()는 속도, run()은 방향과 정지를 정한다는 점을 코드에서 구분해보세요."]
   };
   if (/DC모터|주행|모터/.test(title)) return {
     deviceName: "DC모터",

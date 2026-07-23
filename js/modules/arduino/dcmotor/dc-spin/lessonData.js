@@ -2,40 +2,67 @@ export const lessonData = {
   id: "arduino-dc-spin",
   moduleKey: "arduino",
   unitTitle: "3단원 DC모터",
-  title: "DC모터 회전",
-  subtitle: "L293D 모터드라이버로 DC모터를 한 방향으로 회전시킵니다.",
-  badge: "Motor Driver",
-  goal: "아두이노 출력 핀으로 모터드라이버 입력을 제어해 DC모터가 회전하는 원리를 이해합니다.",
-  parts: ["Arduino UNO 1개", "DC모터 1개", "L293D 모터드라이버 1개", "외부 전원 또는 배터리", "점퍼선 여러 개"],
-  concepts: ["모터드라이버", "디지털 출력", "전원 분리", "공통 GND"],
+  title: "DC모터 출발과 정지",
+  subtitle: "L293D 모터 쉴드의 M1 단자에 연결한 DC모터를 회전시키고 안전하게 정지합니다.",
+  badge: "Motor Shield",
+  goal: "AFMotor 라이브러리의 setSpeed(), run(FORWARD), run(RELEASE)를 사용해 DC모터의 출발과 정지를 제어합니다.",
+  parts: ["Arduino UNO 1개", "L293D 모터 쉴드 1개", "DC 기어모터 1개", "외부 배터리팩 1개"],
+  concepts: ["AFMotor", "M1 모터 단자", "setSpeed", "FORWARD", "RELEASE"],
   circuit: {
-    title: "L293D 기본 회전",
-    summary: "D5와 D6을 L293D 입력에 연결하고, 모터 전원과 아두이노 GND를 공통으로 연결합니다.",
-    imageStatus: "DC모터 기본 회로도 이미지를 받으면 이 영역에 배치합니다."
+    title: "M1 DC모터 기본 연결",
+    summary: "모터를 쉴드의 M1 단자에 연결하고 배터리팩을 EXT_PWR의 +M와 GND에 극성을 맞춰 연결합니다."
   },
-  starterCode: `void setup() {
-  pinMode(5, OUTPUT);
-  pinMode(6, OUTPUT);
+  starterCode: `#include <AFMotor.h>
+
+AF_DCMotor motor(1);
+
+void setup() {
+  motor.setSpeed(150);
 }
 
 void loop() {
-  digitalWrite(5, HIGH);
-  digitalWrite(6, LOW);
+  motor.run(FORWARD);
+  delay(2000);
+
+  motor.run(RELEASE);
+  delay(1000);
 }`,
-  successMessage: "모터드라이버 입력 두 개를 서로 다른 상태로 만들어 회전 조건이 갖춰졌습니다.",
-  aiHints: ["DC모터는 아두이노 핀에 직접 연결하지 않습니다. 모터드라이버가 필요한 이유를 전류 관점에서 생각해볼까요?"],
-  questionPlaceholder: "예: 모터가 안 돌아요. 전원과 GND 중 무엇을 확인해야 하나요?",
-  allowedPins: [5, 6],
+  successMessage: "M1 모터를 지정한 속도로 출발시킨 뒤 RELEASE로 안전하게 정지했습니다.",
+  aiHints: ["setSpeed()와 run()은 각각 무엇을 정하는 명령인지 비교해볼까요?"],
+  questionPlaceholder: "예: M1 모터가 돌지 않아요. 전원과 코드 중 무엇부터 확인해야 하나요?",
+  allowedPins: [],
   simulation: {
     type: "motor",
     view: "motor",
-    label: "입력 핀 한쪽이 HIGH, 다른 쪽이 LOW이면 모터가 한 방향으로 회전합니다.",
-    requiredPatterns: ["digitalWrite\\s*\\(\\s*5\\s*,\\s*HIGH\\s*\\)", "digitalWrite\\s*\\(\\s*6\\s*,\\s*LOW\\s*\\)"]
+    boardLabel: "UNO\nM1",
+    label: "M1 모터가 속도 180으로 3초간 회전한 뒤 정지합니다.",
+    requiredPatterns: [
+      "#include\\s*<AFMotor\\.h>",
+      "AF_DCMotor\\s+motor\\s*\\(\\s*1\\s*\\)",
+      "motor\\.setSpeed\\s*\\(\\s*180\\s*\\)",
+      "motor\\.run\\s*\\(\\s*FORWARD\\s*\\)",
+      "delay\\s*\\(\\s*3000\\s*\\)",
+      "motor\\.run\\s*\\(\\s*RELEASE\\s*\\)"
+    ]
+  },
+  practice: {
+    flow: [
+      "lesson3_1 회로에서 배터리 극성과 M1 모터 연결을 확인합니다.",
+      "참고 코드의 속도와 회전 시간을 오늘의 미션 조건으로 바꿉니다.",
+      "가상 실행 후 실제 모터의 출발·정지 상태를 관찰합니다."
+    ],
+    thinking: [
+      "참고 코드의 속도 150과 미션의 속도 180은 어떤 차이를 만들까요?",
+      "run(RELEASE)가 없으면 모터는 어떤 상태로 남을까요?",
+      "USB 전원만 사용할 때와 외부 배터리를 사용할 때 무엇이 달라질까요?"
+    ]
   },
   codeChecks: [
-    { pattern: /pinMode\s*\(\s*5\s*,\s*OUTPUT\s*\)\s*;/, message: "D5를 OUTPUT으로 설정하세요." },
-    { pattern: /pinMode\s*\(\s*6\s*,\s*OUTPUT\s*\)\s*;/, message: "D6을 OUTPUT으로 설정하세요." },
-    { pattern: /digitalWrite\s*\(\s*5\s*,\s*HIGH\s*\)\s*;/, message: "모터 회전을 위해 D5 HIGH 명령이 필요합니다." },
-    { pattern: /digitalWrite\s*\(\s*6\s*,\s*LOW\s*\)\s*;/, message: "반대 입력 D6은 LOW로 설정해 방향을 만드세요." }
+    { pattern: /#include\s*<AFMotor\.h>/, message: "모터 쉴드를 사용하려면 #include <AFMotor.h>가 필요합니다." },
+    { pattern: /AF_DCMotor\s+motor\s*\(\s*1\s*\)\s*;/, message: "M1 모터 객체를 AF_DCMotor motor(1);로 선언하세요." },
+    { pattern: /motor\.setSpeed\s*\(\s*180\s*\)\s*;/, message: "오늘의 미션 속도는 180입니다." },
+    { pattern: /motor\.run\s*\(\s*FORWARD\s*\)\s*;/, message: "모터를 출발시키는 run(FORWARD)가 필요합니다." },
+    { pattern: /delay\s*\(\s*3000\s*\)\s*;/, message: "모터가 3초 동안 회전하도록 delay(3000)을 사용하세요." },
+    { pattern: /motor\.run\s*\(\s*RELEASE\s*\)\s*;/, message: "동작 후 모터를 정지시키는 run(RELEASE)가 필요합니다." }
   ]
 };

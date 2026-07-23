@@ -17,8 +17,9 @@ export function createBasicSimulator() {
       }
 
       if (view === "motor") {
+        const boardLabel = (lessonData.simulation.boardLabel || "UNO\nDriver").replace(/\n/g, "<br />");
         return `
-          <div class="mini-board">UNO<br />Driver</div>
+          <div class="mini-board">${boardLabel}</div>
           <div class="sim-wire"></div>
           <div class="motor-visual" data-sim-target>
             <div class="motor-wheel"></div>
@@ -29,8 +30,9 @@ export function createBasicSimulator() {
       }
 
       if (view === "car") {
+        const boardLabel = (lessonData.simulation.boardLabel || "UNO\nRobot").replace(/\n/g, "<br />");
         return `
-          <div class="mini-board">UNO<br />Robot</div>
+          <div class="mini-board">${boardLabel}</div>
           <div class="sim-wire"></div>
           <div class="car-visual" data-sim-target>
             <span></span><span></span><b>ROBOT</b><span></span><span></span>
@@ -74,6 +76,7 @@ export function createBasicSimulator() {
     run(code, stage, lessonData) {
       const required = lessonData.simulation.requiredPatterns || [];
       const passed = required.every((patternText) => new RegExp(patternText).test(code));
+      const usesMotorShield = /AFMotor/.test(`${lessonData.referenceCode || ""}\n${lessonData.starterCode || ""}`);
       const target = stage.querySelector("[data-sim-target]");
       target?.classList.toggle("running", passed);
 
@@ -81,7 +84,9 @@ export function createBasicSimulator() {
         passed,
         message: passed
           ? `${lessonData.title} 가상 실행 조건을 만족했습니다. 실제 키트에서는 어떤 부품의 움직임이나 값을 먼저 관찰하면 좋을까요?`
-          : "가상 실행 조건이 아직 부족합니다. 회로 요약의 핀 번호와 코드의 함수 이름, HIGH/LOW 값을 다시 비교해보세요."
+          : usesMotorShield
+            ? "가상 실행 조건이 아직 부족합니다. AFMotor 라이브러리, M1·M2 객체, setSpeed(), FORWARD/BACKWARD/RELEASE와 시간값을 다시 비교해보세요."
+            : "가상 실행 조건이 아직 부족합니다. 회로 요약의 핀 번호와 코드의 함수 이름, HIGH/LOW 값을 다시 비교해보세요."
       };
     },
 

@@ -76,13 +76,13 @@ export const curriculum = [
     id: "dcmotor",
     title: "DC모터",
     unitTitle: "3단원 DC모터",
-    description: "모터드라이버, 방향 제어, PWM, 주행 알고리즘을 다룹니다.",
+    description: "L293D 모터 쉴드의 M1·M2 단자로 출발·정지, 방향, 속도, 2륜 주행을 학습합니다.",
     lessons: [
-      { id: "dc-spin", label: "Lesson 1 DC모터 회전" },
-      { id: "dc-direction", label: "Lesson 2 정회전 역회전" },
-      { id: "dc-speed", label: "Lesson 3 속도 조절" },
-      { id: "two-wheel-drive", label: "Lesson 4 2륜 주행" },
-      { id: "two-wheel-turn", label: "Lesson 5 좌회전 우회전" }
+      { id: "dc-spin", label: "Lesson 1 DC모터 출발과 정지" },
+      { id: "dc-direction", label: "Lesson 2 안전하게 정회전·역회전" },
+      { id: "dc-speed", label: "Lesson 3 모터 속도 3단계 비교" },
+      { id: "two-wheel-drive", label: "Lesson 4 2륜 자동차 전진·후진" },
+      { id: "two-wheel-turn", label: "Lesson 5 좌·우 회전 경로 주행" }
     ]
   },
   {
