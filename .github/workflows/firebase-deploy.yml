@@ -42,14 +42,20 @@ jobs:
           node -e "require('fs').writeFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, process.env.FIREBASE_SERVICE_ACCOUNT_JSON)"
 
       - name: Write Functions environment
+        env:
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
         run: |
+          if [ -z "$ADMIN_PASSWORD" ]; then
+            echo "Missing GitHub secret: ADMIN_PASSWORD"
+            exit 1
+          fi
           cat > functions/.env <<'EOF'
           OPENAI_MODEL=${{ vars.OPENAI_MODEL || 'gpt-5.1' }}
           OPENAI_MAX_OUTPUT_TOKENS=${{ vars.OPENAI_MAX_OUTPUT_TOKENS || '500' }}
           OPENAI_TEACHER_MAX_OUTPUT_TOKENS=${{ vars.OPENAI_TEACHER_MAX_OUTPUT_TOKENS || '900' }}
           CACHE_TTL_MS=${{ vars.CACHE_TTL_MS || '1800000' }}
-          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD || '1234' }}
           EOF
+          printf 'ADMIN_PASSWORD=%s\n' "$ADMIN_PASSWORD" >> functions/.env
 
       - name: Install Functions dependencies
         working-directory: functions
