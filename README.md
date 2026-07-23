@@ -1,4 +1,4 @@
-# AI Robot Coach
+# AI Coach Robot Class
 
 「생각을 키우는 AI 코치 활용 로봇 수업 자료」 웹앱입니다.
 

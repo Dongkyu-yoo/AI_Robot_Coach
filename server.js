@@ -117,7 +117,7 @@ server.on("error", (error) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`AI Robot Coach server: http://localhost:${PORT}`);
+  console.log(`AI Coach Robot Class server: http://localhost:${PORT}`);
   console.log("OpenAI key:", process.env.OPENAI_API_KEY ? "configured" : "missing");
 });
 
