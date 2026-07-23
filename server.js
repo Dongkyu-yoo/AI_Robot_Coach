@@ -9,7 +9,8 @@ const PORT = Number(process.env.PORT || 8787);
 const OPENAI_MODEL = process.env.OPENAI_MODEL || "gpt-5.1";
 const OPENAI_MAX_OUTPUT_TOKENS = Number(process.env.OPENAI_MAX_OUTPUT_TOKENS || 500);
 const CACHE_TTL_MS = Number(process.env.CACHE_TTL_MS || 1000 * 60 * 30);
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "1234";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
+const ADMIN_SESSION_TTL_MS = 1000 * 60 * 60;
 const ROOT = __dirname;
 const API_SETTINGS_PATH = path.resolve(ROOT, "api-settings.json");
 const responseCache = new Map();
@@ -65,6 +66,32 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && req.url === "/api/admin/settings") {
       await handleAdminSettings(req, res);
       return;
+    }
+    if (req.method === "POST" && req.url === "/api/admin/verify") {
+      const payload = await readJsonBody(req);
+      if (!ADMIN_PASSWORD) return sendJson(res, 503, { message: "서버 관리자 비밀번호가 설정되어 있지 않습니다." });
+      if (String(payload.password || "") !== ADMIN_PASSWORD) return sendJson(res, 401, { message: "관리자 비밀번호가 올바르지 않습니다." });
+      const session = createAdminSession(ADMIN_PASSWORD);
+      return sendJson(res, 200, { verified: true, ...session });
+    }
+    if (req.method === "GET" && req.url === "/api/admin/models") {
+      requireAdminSession(req, ADMIN_PASSWORD);
+      const models = await fetchAvailableGptModels(process.env.OPENAI_API_KEY);
+      return sendJson(res, 200, {
+        models,
+        selectedModel: apiSettings.model || OPENAI_MODEL
+      });
+    }
+    if (req.method === "POST" && req.url === "/api/admin/model") {
+      requireAdminSession(req, ADMIN_PASSWORD);
+      const payload = await readJsonBody(req);
+      const models = await fetchAvailableGptModels(process.env.OPENAI_API_KEY);
+      const model = String(payload.model || "").trim();
+      if (!models.includes(model)) return sendJson(res, 400, { message: "현재 계정에서 사용할 수 없는 GPT 모델입니다." });
+      apiSettings = { ...apiSettings, model, updatedAt: new Date().toISOString() };
+      saveApiSettings(apiSettings);
+      responseCache.clear();
+      return sendJson(res, 200, { model, updatedAt: apiSettings.updatedAt });
     }
 
     if (req.method === "GET") {
@@ -204,6 +231,10 @@ async function handleTeacherAnalyze(req, res) {
 
 async function handleAdminSettings(req, res) {
   const payload = await readJsonBody(req);
+  if (!ADMIN_PASSWORD) {
+    sendJson(res, 503, { message: "서버 관리자 비밀번호가 설정되어 있지 않습니다." });
+    return;
+  }
   if (String(payload.password || "") !== ADMIN_PASSWORD) {
     sendJson(res, 401, { message: "관리자 비밀번호가 올바르지 않습니다." });
     return;
@@ -220,8 +251,10 @@ async function handleAdminSettings(req, res) {
 
 async function createOpenAIResponse(input, options = {}) {
   requireApiEnabled();
+  requireOpenAIKey();
   const maxOutputTokens = options.maxOutputTokens || OPENAI_MAX_OUTPUT_TOKENS;
-  const cacheKey = createCacheKey({ model: OPENAI_MODEL, input, maxOutputTokens });
+  const model = apiSettings.model || OPENAI_MODEL;
+  const cacheKey = createCacheKey({ model, input, maxOutputTokens });
   const cached = getCachedResponse(cacheKey);
   if (cached) return cached;
 
@@ -232,7 +265,7 @@ async function createOpenAIResponse(input, options = {}) {
       "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
     },
     body: JSON.stringify({
-      model: OPENAI_MODEL,
+      model,
       input,
       max_output_tokens: maxOutputTokens
     })
@@ -299,6 +332,47 @@ function requireApiEnabled() {
   }
 }
 
+function createAdminSession(secret) {
+  const expiresAt = Date.now() + ADMIN_SESSION_TTL_MS;
+  const signature = crypto.createHmac("sha256", secret).update(String(expiresAt)).digest("base64url");
+  return { adminToken: `${expiresAt}.${signature}`, expiresAt };
+}
+
+function requireAdminSession(req, secret) {
+  if (!secret) throw createHttpError("서버 관리자 비밀번호가 설정되어 있지 않습니다.", 503);
+  const token = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  const [expiresAtText, signature = ""] = token.split(".");
+  const expiresAt = Number(expiresAtText);
+  if (!expiresAt || expiresAt <= Date.now()) throw createHttpError("관리자 인증이 만료되었습니다. 다시 인증해 주세요.", 401);
+  const expected = crypto.createHmac("sha256", secret).update(String(expiresAt)).digest("base64url");
+  const actualBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expected);
+  if (actualBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(actualBuffer, expectedBuffer)) {
+    throw createHttpError("관리자 인증이 올바르지 않습니다.", 401);
+  }
+}
+
+async function fetchAvailableGptModels(apiKey) {
+  if (!apiKey) throw createHttpError("OPENAI_API_KEY가 설정되어 있지 않습니다.", 503);
+  const response = await fetch("https://api.openai.com/v1/models", {
+    headers: { "Authorization": `Bearer ${apiKey}` }
+  });
+  const data = await response.json();
+  if (!response.ok) throw createHttpError(data.error?.message || "OpenAI 모델 목록을 불러오지 못했습니다.", response.status);
+  return data.data
+    .filter((model) => isGeneralGptModel(model.id))
+    .sort((a, b) => Number(b.created || 0) - Number(a.created || 0) || a.id.localeCompare(b.id))
+    .map((model) => model.id);
+}
+
+function isGeneralGptModel(id = "") {
+  const value = String(id).toLowerCase();
+  if (!value.startsWith("gpt-")) return false;
+  if (/-\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  return !["audio", "realtime", "transcribe", "tts", "image", "search", "codex", "deep-research"]
+    .some((keyword) => value.includes(keyword));
+}
+
 function serveStatic(req, res) {
   const urlPath = decodeURIComponent(req.url.split("?")[0]);
   const requestedPath = urlPath === "/" ? "/index.html" : urlPath;
@@ -346,10 +420,16 @@ function sendJson(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
+function createHttpError(message, statusCode) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
+
 function setCorsHeaders(res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
 
 function createCacheKey(value) {

@@ -10,6 +10,9 @@ export async function saveProgressToCloud(moduleId, progress) {
   const docId = `${profile.uid}_${moduleId}`;
   await setDoc(doc(runtime.db, "progress", docId), {
     userId: profile.uid,
+    school: profile.school || "",
+    studentNumber: profile.studentNumber || "",
+    studentName: profile.name || "",
     moduleId,
     lessonId: progress.lessonId || "",
     label: progress.label || "",

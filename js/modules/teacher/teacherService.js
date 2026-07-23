@@ -61,13 +61,20 @@ export async function loadTeacherData() {
       statusMessage: "교사용 권한이 필요합니다. Firestore profiles에서 role이 teacher인 계정만 접근할 수 있습니다."
     };
   }
+  if (!isAdmin(profile) && !profile.school) {
+    return {
+      ...EMPTY_DATA,
+      source: "denied",
+      statusMessage: "교사 프로필에 학교 정보가 없습니다. 관리자에게 문의하세요."
+    };
+  }
 
   const results = await Promise.allSettled([
-    loadStudents(),
-    loadAllQuestions(),
-    loadAllNotes(),
-    loadAllProgress(),
-    loadPdfSubmissions()
+    loadStudents(profile),
+    loadAllQuestions(profile),
+    loadAllNotes(profile),
+    loadAllProgress(profile),
+    loadPdfSubmissions(profile)
   ]);
   const [students, questions, notes, progress, pdfSubmissions] = results.map((result) => result.status === "fulfilled" ? result.value : []);
   const failed = results
@@ -95,44 +102,49 @@ function createPartialLoadMessage(failed) {
   return `Firestore에서 일부 데이터를 불러오지 못했습니다: ${failed.join(", ")}. Firestore rules를 확인하세요.`;
 }
 
-export async function loadStudents() {
+export async function loadStudents(profile = null) {
   const runtime = await getFirebaseRuntime();
   if (!runtime) return [];
-  const { collection, getDocs, query, where } = runtime.firestoreModule;
-  const snap = await getDocs(query(collection(runtime.db, "profiles"), where("role", "==", "student")));
-  return snap.docs.map((docSnap) => normalizeStudent({ ...docSnap.data(), uid: docSnap.id }));
+  const active = profile || await refreshActiveProfile();
+  const snap = await loadScoped(runtime, "profiles", active);
+  return snap.docs.map((docSnap) => normalizeStudent({ ...docSnap.data(), uid: docSnap.id }))
+    .filter((item) => item.role === "student");
 }
 
-export async function loadAllQuestions() {
+export async function loadAllQuestions(profile = null) {
   const runtime = await getFirebaseRuntime();
   if (!runtime) return [];
-  const { collection, getDocs } = runtime.firestoreModule;
-  const snap = await getDocs(collection(runtime.db, "aiQuestions"));
+  const snap = await loadScoped(runtime, "aiQuestions", profile || await refreshActiveProfile());
   return snap.docs.map((docSnap) => normalizeQuestion({ ...docSnap.data(), cloudId: docSnap.id }));
 }
 
-export async function loadAllNotes() {
+export async function loadAllNotes(profile = null) {
   const runtime = await getFirebaseRuntime();
   if (!runtime) return [];
-  const { collection, getDocs } = runtime.firestoreModule;
-  const snap = await getDocs(collection(runtime.db, "engineeringNotes"));
+  const snap = await loadScoped(runtime, "engineeringNotes", profile || await refreshActiveProfile());
   return snap.docs.map((docSnap) => normalizeNote({ ...docSnap.data(), cloudId: docSnap.id }));
 }
 
-export async function loadAllProgress() {
+export async function loadAllProgress(profile = null) {
   const runtime = await getFirebaseRuntime();
   if (!runtime) return [];
-  const { collection, getDocs } = runtime.firestoreModule;
-  const snap = await getDocs(collection(runtime.db, "progress"));
+  const snap = await loadScoped(runtime, "progress", profile || await refreshActiveProfile());
   return snap.docs.map((docSnap) => normalizeProgress({ ...docSnap.data(), cloudId: docSnap.id }));
 }
 
-export async function loadPdfSubmissions() {
+export async function loadPdfSubmissions(profile = null) {
   const runtime = await getFirebaseRuntime();
   if (!runtime) return [];
-  const { collection, getDocs } = runtime.firestoreModule;
-  const snap = await getDocs(collection(runtime.db, "pdfSubmissions"));
+  const snap = await loadScoped(runtime, "pdfSubmissions", profile || await refreshActiveProfile());
   return snap.docs.map((docSnap) => normalizePdfSubmission({ ...docSnap.data(), userId: docSnap.id }));
+}
+
+async function loadScoped(runtime, collectionName, profile) {
+  const { collection, getDocs, query, where } = runtime.firestoreModule;
+  const ref = collection(runtime.db, collectionName);
+  if (isAdmin(profile)) return getDocs(ref);
+  if (!profile?.school) throw new Error("교사 프로필에 학교 정보가 없습니다. 관리자에게 문의하세요.");
+  return getDocs(query(ref, where("school", "==", profile.school)));
 }
 
 export function getStudentSummary(userId, data) {

@@ -70,7 +70,7 @@ FIREBASE_SERVICE_ACCOUNT_ROBOT_AI_CLASS
 ADMIN_PASSWORD
 ```
 
-등록하지 않으면 기본값 `1234`가 사용됩니다.
+반드시 등록해야 하며 기본값은 없습니다.
 
 ## 4. GitHub Variables 선택 등록
 

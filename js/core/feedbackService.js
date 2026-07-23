@@ -1,5 +1,7 @@
 import { ensureActiveProfile, getActiveProfile } from "./authService.js";
 import { getFirebaseRuntime } from "./firebase.js";
+import { isAdmin } from "./accessControl.js";
+import { getCurrentUser } from "./auth.js";
 
 async function context() {
   const runtime = await getFirebaseRuntime();
@@ -10,6 +12,9 @@ async function context() {
 
 export async function createStudentFeedback(input) {
   const { runtime, profile } = await context();
+  if (!isAdmin(getCurrentUser()) && input.school !== profile.school) {
+    throw new Error("같은 학교 학생에게만 피드백을 작성할 수 있습니다.");
+  }
   const { collection, doc, serverTimestamp, setDoc } = runtime.firestoreModule;
   const ref = doc(collection(runtime.db, "studentFeedback"));
   const payload = {
@@ -44,6 +49,16 @@ export async function loadStudentFeedback({ studentId = "", teacherId = "" } = {
     value = teacherId;
   }
   const snap = await getDocs(query(collection(runtime.db, "studentFeedback"), where(field, "==", value)));
+  return snap.docs.map((item) => ({ id: item.id, ...item.data() }))
+    .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
+}
+
+export async function loadFeedbackForTeacher() {
+  const { runtime, profile } = await context();
+  const { collection, getDocs, query, where } = runtime.firestoreModule;
+  const ref = collection(runtime.db, "studentFeedback");
+  if (!isAdmin(getCurrentUser()) && !profile.school) throw new Error("교사 프로필에 학교 정보가 없습니다. 관리자에게 문의하세요.");
+  const snap = await getDocs(isAdmin(getCurrentUser()) ? ref : query(ref, where("school", "==", profile.school)));
   return snap.docs.map((item) => ({ id: item.id, ...item.data() }))
     .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
 }

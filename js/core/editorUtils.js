@@ -1,20 +1,46 @@
-export async function copyEditorCode(editorElement) {
-  const code = String(editorElement?.value ?? editorElement?.textContent ?? "");
-  if (!code.trim()) {
+export async function copyTextToClipboard(text, sourceElement = null) {
+  const value = String(text || "");
+  if (!value.trim()) {
     showToast("복사할 코드가 없습니다.", "warn");
     return false;
   }
 
   try {
-    await navigator.clipboard.writeText(code);
+    if (!navigator.clipboard?.writeText) throw new Error("Clipboard API unavailable");
+    await navigator.clipboard.writeText(value);
     showToast("코드가 복사되었습니다.", "success");
     return true;
   } catch {
-    showToast("코드를 복사하지 못했습니다. 직접 선택하여 복사해 주세요.", "error");
-    editorElement?.focus?.();
-    editorElement?.select?.();
-    return false;
+    try {
+      if (sourceElement?.select) {
+        sourceElement.focus();
+        sourceElement.select();
+      } else {
+        const fallback = document.createElement("textarea");
+        fallback.value = value;
+        fallback.setAttribute("readonly", "");
+        fallback.style.position = "fixed";
+        fallback.style.opacity = "0";
+        document.body.appendChild(fallback);
+        fallback.select();
+        sourceElement = fallback;
+      }
+      const copied = document.execCommand("copy");
+      if (sourceElement?.style?.opacity === "0") sourceElement.remove();
+      if (!copied) throw new Error("execCommand failed");
+      showToast("코드가 복사되었습니다.", "success");
+      return true;
+    } catch {
+      showToast("코드를 복사하지 못했습니다. 직접 선택하여 복사해 주세요.", "error");
+      sourceElement?.focus?.();
+      sourceElement?.select?.();
+      return false;
+    }
   }
+}
+
+export function copyEditorCode(editorElement) {
+  return copyTextToClipboard(editorElement?.value ?? editorElement?.textContent ?? "", editorElement);
 }
 
 export function showToast(message, type = "info") {
@@ -77,15 +103,20 @@ export function mountLabEditorUtilities(root, context = {}) {
   editors.forEach((editor, index) => {
     if (editor.dataset.utilitiesMounted) return;
     editor.dataset.utilitiesMounted = "true";
-    const toolbar = document.createElement("div");
-    toolbar.className = "editor-utility-bar";
-    toolbar.innerHTML = `
-      <button class="btn ghost compact-btn" data-copy-editor type="button">코드 복사</button>
-      <span class="editor-dirty-status" data-editor-dirty>시작 코드와 동일</span>
-      <span class="muted">Tab 들여쓰기 · Ctrl/Cmd+Enter 실행</span>
-    `;
-    editor.before(toolbar);
-    toolbar.querySelector("[data-copy-editor]").onclick = () => copyEditorCode(editor);
+    const card = editor.closest("article, section, .card") || editor.parentElement;
+    const actions = card?.querySelector(".editor-head .button-row, .card-head .button-row, .button-row");
+    const copyButton = document.createElement("button");
+    copyButton.className = "btn ghost-light compact-btn editor-copy-button";
+    copyButton.dataset.copyEditor = "";
+    copyButton.type = "button";
+    copyButton.textContent = "코드 복사";
+    (actions || editor.parentElement).appendChild(copyButton);
+    copyButton.onclick = () => copyEditorCode(editor);
+    const status = document.createElement("span");
+    status.className = "editor-dirty-status";
+    status.dataset.editorDirty = "";
+    status.textContent = "시작 코드와 동일";
+    editor.before(status);
     const initialCode = editor.value;
     const draftKey = `robotCoach:draft:${context.route || "lab"}:${context.lessonId || index}`;
     restoreDraft(editor, draftKey, initialCode);
@@ -96,7 +127,6 @@ export function mountLabEditorUtilities(root, context = {}) {
       draftKey,
       onRun: () => runButton?.click(),
       onDirtyChange: (dirty) => {
-        const status = toolbar.querySelector("[data-editor-dirty]");
         status.textContent = dirty ? "시작 코드에서 수정됨" : "시작 코드와 동일";
         status.classList.toggle("dirty", dirty);
       }

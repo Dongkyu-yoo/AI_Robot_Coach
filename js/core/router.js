@@ -10,7 +10,7 @@ import {
 import { renderRobotArm, mountRobotArm } from "../modules/robotarm/robotarm.js";
 import { renderMecanum, mountMecanum } from "../modules/mecanum/mecanum.js";
 import { renderEngineeringNote, mountEngineeringNote } from "../modules/engineeringNote/engineeringNote.js";
-import { renderTeacher, mountTeacher } from "../modules/teacher/teacher.js";
+import { renderTeacherPortal, mountTeacherPortal } from "../modules/teacher/teacherPortal.js";
 import { renderAdmin, mountAdmin } from "../modules/admin/admin.js";
 import { isAdmin, isTeacherOrAdmin } from "./accessControl.js";
 import { mountTeacherQuestionButton } from "./teacherQuestionUI.js";
@@ -28,7 +28,7 @@ const routeMeta = {
   "mecanum-scourse": ["메카넘 자율주행(S자)", "메카넘 이동 함수를 조합해 S자 코스를 통과하는 순서를 설계합니다."],
   "mecanum-bluetooth": ["메카넘 블루투스 조종", "가상 컨트롤러로 조종을 실험하고 HC-06 명령 코드와 연결합니다."],
   "engineering-note": ["엔지니어링 노트", "문제 해결 과정과 개선 계획을 기록합니다."],
-  admin: ["관리자 메뉴", "GPT API 사용 여부를 설정합니다."],
+  admin: ["관리자 메뉴", "교사 질문 기능과 OpenAI 결제 페이지를 관리합니다."],
   teacher: ["교사용 대시보드", "학생 질문과 엔지니어링 노트를 확인합니다."]
 };
 
@@ -69,7 +69,7 @@ const routeModules = {
   },
   "engineering-note": { render: renderEngineeringNote, mount: mountEngineeringNote },
   admin: { render: renderAdmin, mount: mountAdmin },
-  teacher: { render: renderTeacher, mount: mountTeacher }
+  teacher: { render: renderTeacherPortal, mount: mountTeacherPortal }
 };
 
 let currentRoute = "dashboard";

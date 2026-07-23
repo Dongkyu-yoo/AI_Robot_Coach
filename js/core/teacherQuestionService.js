@@ -1,5 +1,7 @@
 import { ensureActiveProfile, getActiveProfile } from "./authService.js";
 import { getFirebaseRuntime } from "./firebase.js";
+import { isAdmin } from "./accessControl.js";
+import { getCurrentUser } from "./auth.js";
 
 async function context() {
   const runtime = await getFirebaseRuntime();
@@ -44,7 +46,13 @@ export async function loadTeacherQuestions({ mine = false } = {}) {
   const { runtime, profile } = await context();
   const { collection, getDocs, query, where } = runtime.firestoreModule;
   const base = collection(runtime.db, "teacherQuestions");
-  const snap = await getDocs(mine ? query(base, where("userId", "==", profile.uid)) : base);
+  let source = base;
+  if (mine) source = query(base, where("userId", "==", profile.uid));
+  else if (!isAdmin(getCurrentUser())) {
+    if (!profile.school) throw new Error("교사 프로필에 학교 정보가 없습니다. 관리자에게 문의하세요.");
+    source = query(base, where("school", "==", profile.school));
+  }
+  const snap = await getDocs(source);
   return snap.docs.map((item) => ({ id: item.id, ...item.data() }))
     .sort((a, b) => toMillis(b.createdAt) - toMillis(a.createdAt));
 }

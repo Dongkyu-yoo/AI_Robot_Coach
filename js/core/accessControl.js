@@ -5,11 +5,11 @@ export function normalizeEmail(value = "") {
 }
 
 export function isAdmin(user = {}) {
-  return ADMIN_EMAILS.includes(normalizeEmail(user.email));
+  return user.role === "admin" || ADMIN_EMAILS.includes(normalizeEmail(user.email));
 }
 
 export function isTeacherOrAdmin(user = {}) {
-  return user.role === "teacher" || isAdmin(user);
+  return ["teacher", "admin"].includes(user.role) || isAdmin(user);
 }
 
 export function getDisplayRole(user = {}) {

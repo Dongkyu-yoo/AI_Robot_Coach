@@ -43,10 +43,10 @@ OPENAI_MODEL=gpt-5.1
 OPENAI_MAX_OUTPUT_TOKENS=500
 OPENAI_TEACHER_MAX_OUTPUT_TOKENS=900
 CACHE_TTL_MS=1800000
-ADMIN_PASSWORD=1234
+ADMIN_PASSWORD=충분히-긴-관리자-전용-비밀번호
 ```
 
-`functions/.env`는 `.gitignore`에 포함되어 있으므로 GitHub에 올라가지 않습니다.
+`ADMIN_PASSWORD`는 필수이며 기본값이 없습니다. `functions/.env`는 `.gitignore`에 포함되어 있으므로 GitHub에 올라가지 않습니다.
 
 ## 4. 배포
 
@@ -75,4 +75,7 @@ firebase emulators:start --only functions,hosting
 - OpenAI API Key는 Firebase Secret `OPENAI_API_KEY`에만 저장합니다.
 - 클라이언트 JS에서는 `/api/...`만 호출합니다.
 - `functions/index.js` 내부에서만 OpenAI API를 호출합니다.
-- 관리자 API 사용 여부 설정은 Firestore `_settings/api` 문서에 저장됩니다.
+- 관리자 화면의 교사 질문 ON/OFF 설정은 Firestore `systemSettings/teacherQuestion` 문서에 저장됩니다.
+- GPT 모델 드롭다운은 OpenAI `GET /v1/models`에서 현재 API 키로 접근 가능한 일반 텍스트 GPT 모델을 자동 조회합니다.
+- 관리자가 선택한 모델은 Firestore `_settings/api.model`에 저장되며, 이후 Responses API 호출부터 적용됩니다.
+- API 결제·충전 관리는 관리자 화면에서 OpenAI 공식 Billing 페이지로 이동해 처리합니다.
