@@ -7,8 +7,8 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
 const arduino = read("js/modules/arduino/arduino.js");
 const lessonIds = [...arduino.matchAll(/\{\s*id:\s*"([^"]+)",\s*label:\s*"Lesson/g)].map((match) => match[1]);
-assert.equal(lessonIds.length, 22, "아두이노 커리큘럼은 22개여야 합니다.");
-assert.equal(new Set(lessonIds).size, 22, "레슨 ID는 중복되면 안 됩니다.");
+assert.equal(lessonIds.length, 21, "아두이노 커리큘럼은 21개여야 합니다.");
+assert.equal(new Set(lessonIds).size, 21, "레슨 ID는 중복되면 안 됩니다.");
 for (const excluded of ["mecanum-basic", "led-distance", "servo-distance"]) {
   assert(!lessonIds.includes(excluded), `${excluded}는 최종 커리큘럼에서 제외되어야 합니다.`);
 }

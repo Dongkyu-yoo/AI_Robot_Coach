@@ -12,7 +12,6 @@ import { dcMotorDirectionLesson } from "./dcmotor/dc-direction/lessonUI.js";
 import { dcMotorSpeedLesson } from "./dcmotor/dc-speed/lessonUI.js";
 import { twoWheelDriveLesson } from "./dcmotor/two-wheel-drive/lessonUI.js";
 import { twoWheelTurnLesson } from "./dcmotor/two-wheel-turn/lessonUI.js";
-import { ultrasonicDistanceLesson } from "./ultrasonic/distance/lessonUI.js";
 import { ultrasonicDisplayLesson } from "./ultrasonic/display/lessonUI.js";
 import { obstacleDetectLesson } from "./ultrasonic/obstacle-detect/lessonUI.js";
 import { autonomousBasicLesson } from "./ultrasonic/autonomous-basic/lessonUI.js";
@@ -36,7 +35,6 @@ const lessons = {
   "dc-speed": dcMotorSpeedLesson,
   "two-wheel-drive": twoWheelDriveLesson,
   "two-wheel-turn": twoWheelTurnLesson,
-  "ultrasonic-distance": ultrasonicDistanceLesson,
   "ultrasonic-display": ultrasonicDisplayLesson,
   "obstacle-detect": obstacleDetectLesson,
   "autonomous-basic": autonomousBasicLesson,
@@ -89,12 +87,11 @@ export const curriculum = [
     id: "ultrasonic",
     title: "초음파센서",
     unitTitle: "4단원 초음파센서",
-    description: "거리 측정부터 장애물 감지와 자율주행 기초까지 연결합니다.",
+    description: "거리 측정·표시부터 장애물 감지와 자율주행 기초까지 연결합니다.",
     lessons: [
-      { id: "ultrasonic-distance", label: "Lesson 1 거리 측정" },
-      { id: "ultrasonic-display", label: "Lesson 2 거리 표시" },
-      { id: "obstacle-detect", label: "Lesson 3 장애물 감지" },
-      { id: "autonomous-basic", label: "Lesson 4 자율주행 기초" }
+      { id: "ultrasonic-display", label: "Lesson 1 거리 측정 및 표시" },
+      { id: "obstacle-detect", label: "Lesson 2 장애물 감지" },
+      { id: "autonomous-basic", label: "Lesson 3 자율주행 기초" }
     ]
   },
   {
@@ -176,6 +173,9 @@ export function mountArduinoLessonNav(root, context) {
 }
 
 export function getArduinoUnit(unitId, lessonId) {
+  if (lessonId === "ultrasonic-distance") {
+    return curriculum.find((unit) => unit.id === "ultrasonic");
+  }
   return curriculum.find((unit) => unit.id === unitId)
     || curriculum.find((unit) => unit.lessons.some((lesson) => lesson.id === lessonId))
     || curriculum[0];
@@ -190,5 +190,6 @@ export function normalizeArduinoOptions(options = {}) {
 }
 
 function normalizeLessonId(unit, lessonId) {
-  return unit.lessons.some((lesson) => lesson.id === lessonId) ? lessonId : unit.lessons[0].id;
+  const migratedLessonId = lessonId === "ultrasonic-distance" ? "ultrasonic-display" : lessonId;
+  return unit.lessons.some((lesson) => lesson.id === migratedLessonId) ? migratedLessonId : unit.lessons[0].id;
 }

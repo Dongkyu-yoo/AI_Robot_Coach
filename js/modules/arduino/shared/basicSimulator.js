@@ -48,7 +48,7 @@ export function createBasicSimulator() {
 export function createSimulatorFrame(lessonData, sceneHtml, view = "generic") {
   const label = lessonData.simulation.label || "가상 실행 결과를 이곳에서 확인합니다.";
   return `
-    <div class="simulator-shell" data-sim-view="${escapeHtml(view)}" data-sim-status="idle">
+    <div class="simulator-shell" data-sim-view="${escapeHtml(view)}" data-lesson-id="${escapeHtml(lessonData.id || "")}" data-sim-status="idle">
       <div class="simulator-toolbar" aria-label="시뮬레이션 조작">
         <div class="simulator-live-status">
           <span class="sim-status-dot" aria-hidden="true"></span>
@@ -71,6 +71,7 @@ export function createSimulatorFrame(lessonData, sceneHtml, view = "generic") {
       <div class="simulator-viewport" data-role="simulator-viewport">
         ${sceneHtml}
       </div>
+      ${renderInteractiveInput(lessonData)}
       <div class="simulator-readout" aria-live="polite">
         <div>
           <span>현재 동작</span>
@@ -132,12 +133,28 @@ export function bindRichSimulationControls(stage) {
   stage.addEventListener("click", (event) => {
     const button = event.target.closest("[data-sim-action]");
     if (!button || button.disabled) return;
+    if (button.dataset.command) {
+      stage.dataset.pendingBluetoothCommand = button.dataset.command;
+      const commandInput = stage.querySelector('[data-role="bluetooth-command"]');
+      if (commandInput) commandInput.value = button.dataset.command;
+    }
     controlRichSimulation(stage, button.dataset.simAction);
   });
 
   stage.addEventListener("change", (event) => {
-    if (!event.target.matches('[data-role="sim-speed"]')) return;
-    setRichSimulationSpeed(stage, Number(event.target.value));
+    if (event.target.matches('[data-role="sim-speed"]')) {
+      setRichSimulationSpeed(stage, Number(event.target.value));
+      return;
+    }
+    if (event.target.matches('[data-role="servo-pot"]')) {
+      updateServoFromPot(stage, Number(event.target.value));
+    }
+  });
+
+  stage.addEventListener("input", (event) => {
+    if (event.target.matches('[data-role="servo-pot"]')) {
+      updateServoFromPot(stage, Number(event.target.value));
+    }
   });
 }
 
@@ -203,6 +220,16 @@ export function controlRichSimulation(stage, action) {
   const state = simulationStates.get(stage);
   if (!state) return;
 
+  if (action === "bluetooth-send") {
+    sendBluetoothCommand(stage, state);
+    return;
+  }
+
+  if (action === "servo-button") {
+    toggleServoButton(stage, state);
+    return;
+  }
+
   if (action === "toggle") {
     state.paused = !state.paused;
     if (state.timer) clearTimeout(state.timer);
@@ -218,6 +245,11 @@ export function controlRichSimulation(stage, action) {
     if (state.timer) clearTimeout(state.timer);
     state.index = 0;
     state.paused = false;
+    const target = stage.querySelector("[data-sim-target]");
+    if (target?.classList.contains("robot-car")) {
+      target.dataset.heading = "0";
+      target.style.setProperty("--car-heading", "0deg");
+    }
     stage.querySelector(".simulator-shell")?.setAttribute("data-sim-status", "running");
     const button = stage.querySelector('[data-sim-action="toggle"]');
     if (button) button.textContent = "일시정지";
@@ -439,6 +471,9 @@ function buildSimulationSteps(code, lessonData) {
 function renderScene(view, lessonData) {
   const pin = lessonData.allowedPins?.[0] || lessonData.simulation.pin || 9;
   if (view === "servo") {
+    if ((lessonData.id || "").includes("servo-joint")) {
+      return renderRobotArmJointScene(lessonData);
+    }
     return `
       <div class="sim-workbench">
         ${renderUnoBoard(`D${pin}`, [`D${pin}`, "5V", "GND"])}
@@ -481,9 +516,11 @@ function renderScene(view, lessonData) {
           <div class="track-grid"></div>
           <div class="track-path"></div>
           <div class="robot-car" data-sim-target>
-            <i class="wheel left-wheel"></i><i class="wheel right-wheel"></i>
-            <div class="car-body"><span>앞</span><b>UNO</b></div>
-            <i class="caster"></i>
+            <div class="car-chassis">
+              <i class="wheel left-wheel"></i><i class="wheel right-wheel"></i>
+              <div class="car-body"><span>앞</span><b>UNO</b></div>
+              <i class="caster"></i>
+            </div>
           </div>
           <div class="car-direction-label" data-car-direction>정지</div>
           <div class="track-obstacle" data-obstacle aria-label="장애물"></div>
@@ -530,6 +567,94 @@ function renderScene(view, lessonData) {
       ${renderUnoBoard("OUTPUT", ["D13", "5V", "GND"])}
       ${renderCable(["signal", "ground"], ["SIGNAL", "GND"])}
       <div class="sim-device generic-device" data-sim-target>${escapeHtml(lessonData.badge || "OUTPUT")}</div>
+    </div>
+  `;
+}
+
+function renderInteractiveInput(lessonData) {
+  const id = lessonData.id || "";
+  if (id.includes("servo-button")) {
+    const buttonPin = lessonData.allowedPins?.[0] || 2;
+    return `
+      <div class="sim-input-panel servo-button-panel">
+        <div>
+          <span>디지털 입력 D${buttonPin}</span>
+          <strong data-servo-button-state>LOW · 버튼 놓임</strong>
+        </div>
+        <button class="sim-device-control push-button-control" data-sim-action="servo-button" data-sim-requires-run type="button" disabled>
+          <i aria-hidden="true"></i>
+          <span>버튼 누르기</span>
+        </button>
+      </div>
+    `;
+  }
+
+  if (id.includes("servo-pot")) {
+    return `
+      <div class="sim-input-panel servo-pot-panel">
+        <label for="servoPotInput">
+          <span>가변저항 A0</span>
+          <strong data-pot-readout>512 → 90°</strong>
+        </label>
+        <div class="pot-control-wrap">
+          <div class="potentiometer-visual" data-pot-visual><i></i><span>A0</span></div>
+          <input id="servoPotInput" data-role="servo-pot" data-sim-requires-run type="range" min="0" max="1023" value="512" disabled aria-label="가변저항 A0 값" />
+        </div>
+      </div>
+    `;
+  }
+
+  if (id.startsWith("arduino-bt-")) {
+    const commands = getBluetoothCommands(id);
+    return `
+      <div class="sim-input-panel bluetooth-command-panel">
+        <label for="bluetoothCommandInput">
+          <span>스마트폰에서 문자 보내기</span>
+          <small>사용 명령: ${commands.join(" · ")}</small>
+        </label>
+        <div class="bluetooth-command-row">
+          <input
+            id="bluetoothCommandInput"
+            data-role="bluetooth-command"
+            data-sim-requires-run
+            type="text"
+            maxlength="1"
+            placeholder="${commands[0]}"
+            disabled
+            aria-label="전송할 블루투스 문자"
+          />
+          <button class="sim-device-control" data-sim-action="bluetooth-send" data-sim-requires-run type="button" disabled>문자 전송</button>
+        </div>
+        <div class="bluetooth-preset-row">
+          ${commands.map((command) => `
+            <button class="sim-command-chip" data-command="${command}" data-sim-action="bluetooth-send" data-sim-requires-run type="button" disabled>${command}</button>
+          `).join("")}
+        </div>
+        <span class="bluetooth-transmission-status" data-bt-transmission>전송 대기</span>
+      </div>
+    `;
+  }
+
+  return "";
+}
+
+function renderRobotArmJointScene(lessonData) {
+  const pin = lessonData.allowedPins?.[0] || lessonData.simulation.pin || 9;
+  return `
+    <div class="sim-workbench joint-workbench">
+      ${renderUnoBoard(`D${pin}`, [`D${pin}`, "5V", "GND"])}
+      ${renderCable(["signal", "power", "ground"], [`D${pin}`, "5V", "GND"])}
+      <div class="sim-device robot-joint-device" data-sim-target aria-label="1축 로봇팔 관절">
+        <div class="robot-arm-base"><b>BASE</b></div>
+        <div class="robot-arm-shoulder">
+          <div class="joint-servo"><span>SG90</span></div>
+          <div class="robot-arm-link">
+            <div class="robot-arm-end"><i></i><i></i></div>
+          </div>
+        </div>
+        <div class="joint-safe-zone"><span>안전 동작 범위</span></div>
+        <strong class="servo-angle-value joint-angle-value" data-servo-angle>90°</strong>
+      </div>
     </div>
   `;
 }
@@ -598,6 +723,14 @@ function updateScene(stage, view, step) {
     const scanning = step.motion === "scan";
     obstacle?.classList.toggle("is-near", Number(step.distance) < 10);
     sonar?.classList.toggle("is-active", scanning);
+    const currentHeading = Number(target.dataset.heading || 0);
+    const nextHeading = step.motion === "left"
+      ? currentHeading - 38
+      : step.motion === "right"
+        ? currentHeading + 38
+        : currentHeading;
+    target.dataset.heading = String(nextHeading);
+    target.style.setProperty("--car-heading", `${nextHeading}deg`);
   }
 
   if (view === "sensor") {
@@ -619,6 +752,8 @@ function resetScene(stage) {
   const target = stage.querySelector("[data-sim-target]");
   target?.style.removeProperty("--servo-angle");
   target?.style.removeProperty("--motor-duration");
+  target?.style.removeProperty("--car-heading");
+  if (target) target.dataset.heading = "0";
   setText(stage, "[data-servo-angle]", "90°");
   setText(stage, "[data-motor-direction]", "정지");
   setText(stage, "[data-car-direction]", "정지");
@@ -631,13 +766,134 @@ function resetScene(stage) {
   stage.querySelector("[data-bt-led]")?.classList.remove("is-on");
   stage.querySelector("[data-obstacle]")?.classList.remove("is-near");
   stage.querySelector("[data-car-sonar]")?.classList.remove("is-active");
+  stage.dataset.servoButtonPressed = "false";
+  setText(stage, "[data-servo-button-state]", "LOW · 버튼 놓임");
+  const servoButton = stage.querySelector('[data-sim-action="servo-button"]');
+  if (servoButton) servoButton.querySelector("span").textContent = "버튼 누르기";
+  const potInput = stage.querySelector('[data-role="servo-pot"]');
+  if (potInput) potInput.value = "512";
+  setText(stage, "[data-pot-readout]", "512 → 90°");
+  stage.querySelector("[data-pot-visual]")?.style.setProperty("--pot-angle", "0deg");
 }
 
 function setControlsEnabled(stage, enabled) {
+  stage.querySelectorAll('[data-sim-action="toggle"], [data-sim-action="restart"], [data-sim-requires-run]').forEach((control) => {
+    control.disabled = !enabled;
+  });
   stage.querySelectorAll("[data-sim-action]").forEach((button) => {
-    button.disabled = !enabled;
     if (button.dataset.simAction === "toggle") button.textContent = "일시정지";
   });
+}
+
+function toggleServoButton(stage, state) {
+  const target = stage.querySelector("[data-sim-target]");
+  if (!target) return;
+  const pressed = stage.dataset.servoButtonPressed !== "true";
+  const angles = [...state.code.matchAll(/\.write\s*\(\s*(\d+)\s*\)/g)].map((match) => Number(match[1]));
+  const highAngle = angles[0] ?? 90;
+  const lowAngle = angles.at(-1) ?? 0;
+  const angle = pressed ? highAngle : lowAngle;
+  stage.dataset.servoButtonPressed = String(pressed);
+  target.style.setProperty("--servo-angle", `${angle - 90}deg`);
+  setText(stage, "[data-servo-angle]", `${angle}°`);
+  setText(stage, "[data-servo-button-state]", pressed ? "HIGH · 버튼 눌림" : "LOW · 버튼 놓임");
+  setText(stage, "[data-sim-current]", pressed ? "버튼 입력 HIGH" : "버튼 입력 LOW");
+  setText(stage, "[data-sim-value]", `서보 ${angle}°`);
+  setText(stage, "[data-sim-status-label]", "직접 입력");
+  const button = stage.querySelector('[data-sim-action="servo-button"]');
+  if (button) {
+    button.classList.toggle("is-pressed", pressed);
+    button.querySelector("span").textContent = pressed ? "버튼 놓기" : "버튼 누르기";
+  }
+  highlightCode(stage, state.code, pressed ? "HIGH" : "else");
+}
+
+function updateServoFromPot(stage, sensorValue) {
+  const state = simulationStates.get(stage);
+  const target = stage.querySelector("[data-sim-target]");
+  if (!state || !target || !Number.isFinite(sensorValue)) return;
+  const safeValue = Math.max(0, Math.min(1023, sensorValue));
+  const angle = Math.round((safeValue / 1023) * 180);
+  target.style.setProperty("--servo-angle", `${angle - 90}deg`);
+  setText(stage, "[data-servo-angle]", `${angle}°`);
+  setText(stage, "[data-pot-readout]", `${safeValue} → ${angle}°`);
+  setText(stage, "[data-sim-current]", "가변저항 직접 조절");
+  setText(stage, "[data-sim-value]", `A0 ${safeValue} · 서보 ${angle}°`);
+  setText(stage, "[data-sim-status-label]", "직접 입력");
+  stage.querySelector("[data-pot-visual]")?.style.setProperty("--pot-angle", `${(safeValue / 1023) * 270 - 135}deg`);
+  highlightCode(stage, state.code, "analogRead");
+}
+
+function sendBluetoothCommand(stage, state) {
+  const input = stage.querySelector('[data-role="bluetooth-command"]');
+  const rawCommand = stage.dataset.pendingBluetoothCommand || input?.value || "";
+  delete stage.dataset.pendingBluetoothCommand;
+  const command = String(rawCommand).trim().slice(0, 1).toUpperCase();
+  const lessonId = stage.querySelector(".simulator-shell")?.dataset.lessonId || "";
+  const allowed = getBluetoothCommands(lessonId);
+  if (!command || !allowed.includes(command)) {
+    setText(stage, "[data-bt-transmission]", `사용 가능한 문자: ${allowed.join(", ")}`);
+    setText(stage, "[data-sim-current]", "지원하지 않는 문자입니다.");
+    setText(stage, "[data-sim-value]", `명령: ${command || "없음"}`);
+    return;
+  }
+
+  if (input) input.value = command;
+  if (state.timer) clearTimeout(state.timer);
+  state.timer = null;
+  state.paused = true;
+  const toggle = stage.querySelector('[data-sim-action="toggle"]');
+  if (toggle) toggle.textContent = "자동 재생 계속";
+
+  const target = stage.querySelector("[data-sim-target]");
+  const shell = stage.querySelector(".simulator-shell");
+  shell?.setAttribute("data-sim-status", "running");
+  setText(stage, "[data-sim-status-label]", "문자 전송");
+  setText(stage, "[data-phone-command]", command);
+  setText(stage, "[data-bt-state]", "수신 완료");
+  setText(stage, "[data-bt-transmission]", `스마트폰 TX → HC-06 RX : '${command}'`);
+  setText(stage, "[data-sim-current]", `블루투스 문자 '${command}' 수신`);
+  setText(stage, "[data-sim-value]", applyBluetoothOutput(stage, target, lessonId, command));
+  stage.querySelector(".bluetooth-command-panel")?.classList.add("is-transmitting");
+  setTimeout(() => stage.querySelector(".bluetooth-command-panel")?.classList.remove("is-transmitting"), 650);
+  highlightCode(stage, state.code, command === "1" ? "HIGH" : command === "0" ? "LOW" : `'${command}'`);
+}
+
+function applyBluetoothOutput(stage, target, lessonId, command) {
+  if (lessonId.includes("bt-led")) {
+    const isOn = command === "1";
+    stage.querySelector("[data-bt-led]")?.classList.toggle("is-on", isOn);
+    if (target) target.dataset.motion = isOn ? "on" : "off";
+    return isOn ? "LED HIGH · 켜짐" : "LED LOW · 꺼짐";
+  }
+
+  if (lessonId.includes("bt-servo")) {
+    const angle = command === "L" ? 30 : 150;
+    target?.style.setProperty("--servo-angle", `${angle - 90}deg`);
+    setText(stage, "[data-servo-angle]", `${angle}°`);
+    return `서보 ${angle}°`;
+  }
+
+  if (lessonId.includes("bt-motor")) {
+    const running = command === "F";
+    if (target) target.dataset.motion = running ? "forward" : "stop";
+    setText(stage, "[data-motor-direction]", running ? "정회전 ↷" : "정지");
+    const meter = stage.querySelector("[data-motor-speed]");
+    if (meter) meter.style.width = running ? "75%" : "0%";
+    return running ? "모터 정회전" : "모터 정지";
+  }
+
+  const motion = command === "F" ? "forward" : command === "B" ? "backward" : "stop";
+  if (target) target.dataset.motion = motion;
+  setText(stage, "[data-car-direction]", motion === "forward" ? "전진 ↑" : motion === "backward" ? "후진 ↓" : "정지");
+  return motion === "forward" ? "자동차 전진" : motion === "backward" ? "자동차 후진" : "자동차 정지";
+}
+
+function getBluetoothCommands(lessonId) {
+  if (lessonId.includes("bt-led")) return ["1", "0"];
+  if (lessonId.includes("bt-servo")) return ["L", "R"];
+  if (lessonId.includes("bt-motor")) return ["F", "S"];
+  return ["F", "B", "S"];
 }
 
 function setText(stage, selector, value) {
