@@ -56,6 +56,7 @@ export const api = onRequest(
       }
 
       if (req.method === "GET" && route === "/api/admin/settings") {
+        requireAdminSession(req, adminPassword.value());
         const settings = await getApiSettings();
         sendJson(res, 200, { apiEnabled: Boolean(settings.apiEnabled) });
         return;
@@ -180,16 +181,8 @@ async function handleTeacherAnalyze(req, res) {
 }
 
 async function handleAdminSettings(req, res) {
+  requireAdminSession(req, adminPassword.value());
   const payload = await readJsonBody(req);
-  if (!adminPassword.value()) {
-    sendJson(res, 503, { message: "서버 관리자 비밀번호가 설정되어 있지 않습니다." });
-    return;
-  }
-  if (String(payload.password || "") !== adminPassword.value()) {
-    sendJson(res, 401, { message: "관리자 비밀번호가 올바르지 않습니다." });
-    return;
-  }
-
   const apiEnabled = Boolean(payload.apiEnabled);
   await db.doc("_settings/api").set({
     apiEnabled,

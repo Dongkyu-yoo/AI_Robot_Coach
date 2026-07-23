@@ -49,7 +49,7 @@ function renderLoading() {
   return `<p class="muted">시스템 설정을 불러오는 중입니다.</p>`;
 }
 
-function renderSettings(settings, modelSettings) {
+function renderSettings(settings, modelSettings, apiSettings) {
   const modelOptions = modelSettings.models.includes(modelSettings.selectedModel)
     ? modelSettings.models
     : [modelSettings.selectedModel, ...modelSettings.models].filter(Boolean);
@@ -61,6 +61,13 @@ function renderSettings(settings, modelSettings) {
         <select data-role="teacher-question-enabled" aria-label="교사 질문 기능 설정">
           <option value="true" ${settings.teacherQuestionEnabled ? "selected" : ""}>켜짐</option>
           <option value="false" ${settings.teacherQuestionEnabled ? "" : "selected"}>꺼짐</option>
+        </select>
+      </div>
+      <div class="system-setting-row">
+        <div><b>AI 코치 사용하기</b><small>학생 실습실의 AI 질문·코칭 기능 전체 사용 여부</small></div>
+        <select data-role="ai-coach-enabled" aria-label="AI 코치 사용 설정">
+          <option value="true" ${apiSettings.apiEnabled ? "selected" : ""}>켜짐</option>
+          <option value="false" ${apiSettings.apiEnabled ? "" : "selected"}>꺼짐</option>
         </select>
       </div>
       <div class="system-setting-row">
@@ -112,12 +119,13 @@ function bindPasswordForm(host) {
 async function loadSettings(host) {
   host.innerHTML = renderLoading();
   try {
-    const [settings, members, modelSettings] = await Promise.all([
+    const [settings, members, modelSettings, apiSettings] = await Promise.all([
       loadSystemSettings(),
       loadMembers(),
-      loadAdminModels()
+      loadAdminModels(),
+      loadAdminApiSettings()
     ]);
-    host.innerHTML = `${renderSettings(settings, modelSettings)}${renderMemberManagement(members)}`;
+    host.innerHTML = `${renderSettings(settings, modelSettings, apiSettings)}${renderMemberManagement(members)}`;
     bindSettings(host);
     bindMemberManagement(host, members);
   } catch (error) {
@@ -139,9 +147,9 @@ function renderMemberManagement(members) {
         <button class="btn primary nowrap" type="submit">검색</button>
         <button class="btn ghost-light nowrap" data-role="admin-member-reset" type="button">초기화</button>
       </form>
-      <div class="teacher-table-wrap">
-        <table class="teacher-table">
-          <thead><tr><th>학교</th><th>학번</th><th>이름</th><th>이메일</th><th>역할</th><th>관리</th></tr></thead>
+      <div class="teacher-table-wrap admin-member-table-wrap">
+        <table class="teacher-table admin-member-table">
+          <thead><tr><th class="col-school">학교</th><th class="col-number">학번</th><th class="col-name">이름</th><th class="col-email">이메일</th><th class="col-role">역할</th><th class="col-actions">관리</th></tr></thead>
           <tbody data-role="admin-member-rows">${renderMemberRows(members)}</tbody>
         </table>
       </div>
@@ -249,6 +257,24 @@ function bindSettings(host) {
       event.target.disabled = false;
     }
   });
+  host.querySelector('[data-role="ai-coach-enabled"]').addEventListener("change", async (event) => {
+    const previous = event.target.value === "true";
+    event.target.disabled = true;
+    try {
+      const enabled = event.target.value === "true";
+      await updateAdminApiSetting(enabled);
+      showToast(`AI 코치 사용이 ${enabled ? "켜짐" : "꺼짐"}으로 저장되었습니다.`, "success");
+    } catch (error) {
+      event.target.value = String(!previous);
+      showToast(error.message, "error");
+      if (error.status === 401) {
+        clearAdminSession();
+        await loadSettings(host);
+      }
+    } finally {
+      event.target.disabled = false;
+    }
+  });
   host.querySelector('[data-role="openai-model"]').addEventListener("change", async (event) => {
     const previous = event.target.dataset.previous || event.target.value;
     event.target.disabled = true;
@@ -289,6 +315,17 @@ async function verifyAdminPassword(password) {
 
 async function loadAdminModels() {
   return requestAdminJson("/api/admin/models");
+}
+
+async function loadAdminApiSettings() {
+  return requestAdminJson("/api/admin/settings");
+}
+
+async function updateAdminApiSetting(apiEnabled) {
+  return requestAdminJson("/api/admin/settings", {
+    method: "POST",
+    body: JSON.stringify({ apiEnabled })
+  });
 }
 
 async function updateAdminModel(model) {

@@ -1740,7 +1740,8 @@ button:disabled {
 }
 
 .admin-card {
-  max-width: 760px;
+  width: 100%;
+  max-width: none;
 }
 
 .admin-toggle {
@@ -2769,6 +2770,16 @@ button:disabled {
 
 .admin-member-panel .teacher-search-row {
   margin: 14px 0;
+}
+
+.admin-member-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.admin-member-table {
+  min-width: 720px;
 }
 
 .admin-member-panel [data-role="admin-member-form"] {

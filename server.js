@@ -59,6 +59,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && req.url === "/api/admin/settings") {
+      requireAdminSession(req, ADMIN_PASSWORD);
       sendJson(res, 200, { apiEnabled: Boolean(apiSettings.apiEnabled) });
       return;
     }
@@ -230,16 +231,8 @@ async function handleTeacherAnalyze(req, res) {
 }
 
 async function handleAdminSettings(req, res) {
+  requireAdminSession(req, ADMIN_PASSWORD);
   const payload = await readJsonBody(req);
-  if (!ADMIN_PASSWORD) {
-    sendJson(res, 503, { message: "서버 관리자 비밀번호가 설정되어 있지 않습니다." });
-    return;
-  }
-  if (String(payload.password || "") !== ADMIN_PASSWORD) {
-    sendJson(res, 401, { message: "관리자 비밀번호가 올바르지 않습니다." });
-    return;
-  }
-
   apiSettings = {
     ...apiSettings,
     apiEnabled: Boolean(payload.apiEnabled),
