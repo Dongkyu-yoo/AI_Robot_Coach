@@ -169,7 +169,8 @@ export function startRichSimulation(stage, { code, steps, view = "generic" }) {
     steps: normalizedSteps,
     index: 0,
     speed: Number(stage.querySelector('[data-role="sim-speed"]')?.value || 1),
-    paused: false,
+    paused: Boolean(normalizedSteps[0]?.awaitInput),
+    interactive: Boolean(normalizedSteps[0]?.awaitInput),
     timer: null
   };
   simulationStates.set(stage, state);
@@ -178,7 +179,11 @@ export function startRichSimulation(stage, { code, steps, view = "generic" }) {
   renderTimeline(stage, normalizedSteps);
   renderCodeTrace(stage, code);
   applyStep(stage, state);
-  scheduleNext(stage, state);
+  if (state.interactive) {
+    setInteractiveReadyState(stage, state);
+  } else {
+    scheduleNext(stage, state);
+  }
 }
 
 export function showSimulationError(stage, message, missingCount = 0) {
@@ -231,6 +236,7 @@ export function controlRichSimulation(stage, action) {
   }
 
   if (action === "toggle") {
+    if (state.interactive) return;
     state.paused = !state.paused;
     if (state.timer) clearTimeout(state.timer);
     state.timer = null;
@@ -244,7 +250,8 @@ export function controlRichSimulation(stage, action) {
   if (action === "restart") {
     if (state.timer) clearTimeout(state.timer);
     state.index = 0;
-    state.paused = false;
+    state.paused = state.interactive;
+    if (state.interactive) resetInteractiveInput(stage);
     const target = stage.querySelector("[data-sim-target]");
     if (target?.classList.contains("robot-car")) {
       target.dataset.heading = "0";
@@ -254,7 +261,11 @@ export function controlRichSimulation(stage, action) {
     const button = stage.querySelector('[data-sim-action="toggle"]');
     if (button) button.textContent = "일시정지";
     applyStep(stage, state);
-    scheduleNext(stage, state);
+    if (state.interactive) {
+      setInteractiveReadyState(stage, state);
+    } else {
+      scheduleNext(stage, state);
+    }
   }
 }
 
@@ -274,7 +285,7 @@ function scheduleNext(stage, state) {
     simulationStates.delete(stage);
     return;
   }
-  if (state.paused || !simulationStates.has(stage)) return;
+  if (state.interactive || state.paused || !simulationStates.has(stage)) return;
   const step = state.steps[state.index];
   const wait = Math.max(320, Math.min(2200, (step.duration || 1000) / state.speed));
   state.timer = setTimeout(() => {
@@ -360,6 +371,31 @@ function buildSimulationSteps(code, lessonData) {
 
   if (view === "servo") {
     const angles = [...code.matchAll(/\.write\s*\(\s*(\d+)\s*\)/g)].map((match) => Number(match[1]));
+    if (id.includes("servo-button")) {
+      const lowAngle = angles.at(-1) ?? 0;
+      return [{
+        label: "버튼 입력 대기",
+        value: `LOW · 서보 ${lowAngle}°`,
+        duration: 0,
+        motion: "idle",
+        angle: lowAngle,
+        codeHint: "digitalRead",
+        awaitInput: true,
+        inputType: "button"
+      }];
+    }
+    if (id.includes("servo-pot")) {
+      return [{
+        label: "가변저항 입력 대기",
+        value: "A0 512 · 서보 90°",
+        duration: 0,
+        motion: "idle",
+        angle: 90,
+        codeHint: "analogRead",
+        awaitInput: true,
+        inputType: "pot"
+      }];
+    }
     const values = angles.length ? angles : id.includes("pot") ? [0, 45, 90, 135, 180] : [0, 90, 180];
     return values.slice(0, 6).map((angle, index) => ({
       label: `서보 ${angle}° 이동`,
@@ -773,7 +809,7 @@ function resetScene(stage) {
   const potInput = stage.querySelector('[data-role="servo-pot"]');
   if (potInput) potInput.value = "512";
   setText(stage, "[data-pot-readout]", "512 → 90°");
-  stage.querySelector("[data-pot-visual]")?.style.setProperty("--pot-angle", "0deg");
+  stage.querySelector("[data-pot-visual]")?.style.setProperty("--pot-rotation", "0deg");
 }
 
 function setControlsEnabled(stage, enabled) {
@@ -783,6 +819,38 @@ function setControlsEnabled(stage, enabled) {
   stage.querySelectorAll("[data-sim-action]").forEach((button) => {
     if (button.dataset.simAction === "toggle") button.textContent = "일시정지";
   });
+}
+
+function setInteractiveReadyState(stage, state) {
+  const step = state.steps[0];
+  const shell = stage.querySelector(".simulator-shell");
+  const target = stage.querySelector("[data-sim-target]");
+  shell?.setAttribute("data-sim-status", "ready");
+  target?.classList.remove("running");
+  if (target) target.dataset.motion = "idle";
+  setText(stage, "[data-sim-status-label]", "입력 대기");
+  setText(stage, "[data-sim-current]", step.label);
+  setText(stage, "[data-sim-value]", step.value);
+  const toggle = stage.querySelector('[data-sim-action="toggle"]');
+  if (toggle) {
+    toggle.disabled = true;
+    toggle.textContent = "자동 재생 없음";
+  }
+}
+
+function resetInteractiveInput(stage) {
+  stage.dataset.servoButtonPressed = "false";
+  const servoButton = stage.querySelector('[data-sim-action="servo-button"]');
+  if (servoButton) {
+    servoButton.classList.remove("is-pressed");
+    servoButton.querySelector("span").textContent = "버튼 누르기";
+  }
+  setText(stage, "[data-servo-button-state]", "LOW · 버튼 놓임");
+
+  const potInput = stage.querySelector('[data-role="servo-pot"]');
+  if (potInput) potInput.value = "512";
+  setText(stage, "[data-pot-readout]", "512 → 90°");
+  stage.querySelector("[data-pot-visual]")?.style.setProperty("--pot-rotation", "0deg");
 }
 
 function toggleServoButton(stage, state) {
@@ -820,7 +888,7 @@ function updateServoFromPot(stage, sensorValue) {
   setText(stage, "[data-sim-current]", "가변저항 직접 조절");
   setText(stage, "[data-sim-value]", `A0 ${safeValue} · 서보 ${angle}°`);
   setText(stage, "[data-sim-status-label]", "직접 입력");
-  stage.querySelector("[data-pot-visual]")?.style.setProperty("--pot-angle", `${(safeValue / 1023) * 270 - 135}deg`);
+  stage.querySelector("[data-pot-visual]")?.style.setProperty("--pot-rotation", `${(safeValue / 1023) * 270 - 135}deg`);
   highlightCode(stage, state.code, "analogRead");
 }
 

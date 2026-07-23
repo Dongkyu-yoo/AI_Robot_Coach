@@ -799,6 +799,11 @@ textarea {
   box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.16);
 }
 
+.simulator-shell[data-sim-status="ready"] .sim-status-dot {
+  background: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+}
+
 .simulator-shell[data-sim-status="error"] .sim-status-dot {
   background: #dc2626;
   box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.14);
@@ -1055,24 +1060,46 @@ textarea {
 }
 
 .servo-device {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
+  width: 175px;
+  height: 178px;
   min-height: 175px;
-  padding-top: 16px;
+  padding: 0;
 }
 
 .servo-scale {
-  display: flex;
-  justify-content: space-between;
-  width: 125px;
+  position: absolute;
+  inset: 0;
   color: #64748b;
   font-size: 9px;
   font-weight: 900;
+  pointer-events: none;
+}
+
+.servo-scale span {
+  position: absolute;
+  min-width: 24px;
+  text-align: center;
+}
+
+.servo-scale span:nth-child(1) {
+  left: 50%;
+  top: 4px;
+  transform: translateX(-50%);
+}
+
+.servo-scale span:nth-child(2) {
+  right: 0;
+  top: 51px;
+}
+
+.servo-scale span:nth-child(3) {
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
 }
 
 .servo-case {
-  position: relative;
+  position: absolute;
   display: grid;
   place-items: center;
   width: 78px;
@@ -1082,6 +1109,9 @@ textarea {
   color: white;
   background: linear-gradient(135deg, #2563eb, #1e40af);
   box-shadow: 0 8px 15px rgba(37, 99, 235, 0.24);
+  left: 50%;
+  top: 59px;
+  transform: translateX(-50%);
 }
 
 .servo-case::before {
@@ -1122,9 +1152,13 @@ textarea {
 }
 
 .servo-angle-value {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
   color: #1e3a8a;
   font-size: 13px;
   font-weight: 900;
+  transform: translateX(-50%);
 }
 
 .dc-motor-device {
