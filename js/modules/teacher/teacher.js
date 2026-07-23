@@ -12,6 +12,8 @@ import {
 import { analyzeTeacherLearningState } from "./teacherAnalysis.js";
 import { isApiEnabled } from "../../core/aiSettings.js";
 import { gptClient } from "../../core/gptClient.js";
+import { curriculum } from "../arduino/arduino.js";
+import { mountTeacherOperations, renderTeacherOperations } from "./teacherOperations.js";
 
 let teacherState = {
   data: null,
@@ -42,7 +44,7 @@ let teacherState = {
   }
 };
 
-const TOTAL_LESSON_COUNT = 37;
+const TOTAL_LESSON_COUNT = curriculum.reduce((sum, unit) => sum + unit.lessons.length, 0);
 
 export function renderTeacher() {
   return `
@@ -102,6 +104,7 @@ function renderTeacherApp(host) {
   host.innerHTML = `
     ${renderSummaryCards(filtered, data)}
     ${renderRecentActivity(filtered)}
+    ${renderTeacherOperations()}
     ${renderFilters(data)}
     ${renderTabs()}
     <div class="teacher-main-grid">
@@ -115,6 +118,7 @@ function renderTeacherApp(host) {
     ${renderAiAnalysis(data, filtered)}
   `;
   bindTeacherEvents(host);
+  mountTeacherOperations(host);
 }
 
 function renderSummaryCards(filtered, data) {
@@ -218,6 +222,8 @@ function renderFilters(data) {
         <option value="has" ${f.note === "has" ? "selected" : ""}>노트 있음</option>
         <option value="none" ${f.note === "none" ? "selected" : ""}>노트 없음</option>
       </select>
+      <button class="btn primary" data-role="teacher-search" type="button">검색</button>
+      <button class="btn ghost" data-role="teacher-search-reset" type="button">초기화</button>
     </section>
   `;
 }
@@ -578,19 +584,15 @@ function renderAiResult() {
 
 function bindTeacherEvents(host) {
   host.querySelectorAll("[data-filter]").forEach((input) => {
-    input.addEventListener("input", () => {
-      teacherState.filters[input.dataset.filter] = input.value;
-      teacherState.filtered = searchTeacherData(teacherState.data, teacherState.filters.keyword, teacherState.filters);
-      if (!teacherState.filtered.summaries.some((item) => item.userId === teacherState.selectedUserId)) {
-        teacherState.selectedUserId = teacherState.filtered.summaries[0]?.userId || "";
-      }
-      if (!teacherState.filtered.summaries.some((item) => item.userId === teacherState.analysisStudentId)) {
-        teacherState.analysisStudentId = teacherState.filtered.summaries[0]?.userId || "";
-      }
-      teacherState.aiAnalysisHtml = "";
-      teacherState.aiAnalysisStatus = "idle";
-      renderTeacherApp(host);
+    input.addEventListener("change", () => { teacherState.filters[input.dataset.filter] = input.value; });
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") executeTeacherSearch(host);
     });
+  });
+  host.querySelector('[data-role="teacher-search"]')?.addEventListener("click", () => executeTeacherSearch(host));
+  host.querySelector('[data-role="teacher-search-reset"]')?.addEventListener("click", () => {
+    teacherState.filters = { keyword: "", school: "", module: "", topic: "", from: "", to: "", pdf: "", note: "" };
+    executeTeacherSearch(host);
   });
 
   host.querySelectorAll("[data-teacher-tab]").forEach((button) => {
@@ -654,6 +656,18 @@ function bindTeacherEvents(host) {
 
   bindAnalysisEvents(host);
   bindPdfButtons(host);
+}
+
+function executeTeacherSearch(host) {
+  host.querySelectorAll("[data-filter]").forEach((input) => {
+    teacherState.filters[input.dataset.filter] = input.value;
+  });
+  teacherState.filtered = searchTeacherData(teacherState.data, teacherState.filters.keyword, teacherState.filters);
+  teacherState.selectedUserId = teacherState.filtered.summaries[0]?.userId || "";
+  teacherState.analysisStudentId = teacherState.filtered.summaries[0]?.userId || "";
+  teacherState.aiAnalysisHtml = "";
+  teacherState.aiAnalysisStatus = "idle";
+  renderTeacherApp(host);
 }
 
 function bindPdfSettingsEvents(root, host) {
@@ -770,10 +784,7 @@ function buildTeacherAiPayload() {
 
 function compactStudent(student = {}) {
   return {
-    userId: student.userId,
-    school: student.school,
-    studentNumber: student.studentNumber,
-    name: student.name,
+    pseudonym: student.userId ? `student-${String(student.userId).slice(-6)}` : "student",
     noteCount: student.noteCount,
     questionCount: student.questionCount,
     completedCount: student.completedCount,
@@ -783,8 +794,7 @@ function compactStudent(student = {}) {
 
 function compactNote(note = {}) {
   return {
-    studentNumber: note.studentNumber,
-    studentName: note.studentName,
+    pseudonym: note.userId ? `student-${String(note.userId).slice(-6)}` : "student",
     date: note.date,
     topic: note.topic,
     activity: truncate(note.activity),
@@ -797,8 +807,7 @@ function compactNote(note = {}) {
 
 function compactQuestion(question = {}) {
   return {
-    studentNumber: question.studentNumber,
-    studentName: question.studentName,
+    pseudonym: question.userId ? `student-${String(question.userId).slice(-6)}` : "student",
     module: question.module,
     lessonTitle: question.lessonTitle || question.lessonId,
     question: truncate(question.question),

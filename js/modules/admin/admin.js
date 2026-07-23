@@ -11,13 +11,17 @@ export function renderAdmin() {
           <div>
             <span class="pill">Admin</span>
             <h2>관리자 메뉴</h2>
-            <p class="muted">교사 계정에서 비밀번호를 입력한 뒤 GPT API 전역 사용 여부를 설정합니다.</p>
+            <p class="muted">관리자 계정에서 API 사용, 교사 질문 기능, 공식 결제 페이지 연결을 관리합니다.</p>
           </div>
         </div>
 
         <div data-role="admin-content">
           ${unlocked ? renderSettingsSkeleton() : renderPasswordForm()}
         </div>
+      </article>
+      <article class="card admin-card">
+        <h3>시스템 설정</h3>
+        <div data-role="system-settings"><p class="muted">Firestore 설정을 불러오는 중입니다.</p></div>
       </article>
     </section>
   `;
@@ -29,6 +33,53 @@ export function mountAdmin(root) {
     loadSettings(content);
   }
   bindPasswordForm(content);
+  loadAndBindSystemSettings(root);
+}
+
+async function loadAndBindSystemSettings(root) {
+  const host = root.querySelector('[data-role="system-settings"]');
+  try {
+    const settings = await loadSystemSettings();
+    host.innerHTML = `
+      <label class="admin-toggle">
+        <input data-role="teacher-question-enabled" type="checkbox" ${settings.teacherQuestionEnabled ? "checked" : ""} />
+        <span><b>교사에게 질문하기 기능</b><small>끄면 학생 화면에서 질문 전송 기능을 사용할 수 없습니다.</small></span>
+      </label>
+      <label>
+        <span>월 사용 한도(관리자 기록용, 선택)</span>
+        <input data-role="monthly-limit" type="number" min="0" step="1" value="${settings.monthlyLimit ?? ""}" placeholder="실제 OpenAI 잔액을 조회하지 않습니다." />
+      </label>
+      <div class="admin-actions">
+        <button class="btn ghost" data-role="save-system-settings" type="button">설정 저장</button>
+        <button class="btn primary" data-role="open-billing" type="button">OpenAI Billing 열기</button>
+      </div>
+      <p class="muted">OpenAI API 충전 및 결제 관리는 OpenAI 공식 결제 페이지에서 진행됩니다.</p>
+      <p class="muted">OpenAI 사용량은 공식 관리 페이지에서 확인하세요. 이 앱은 잔액을 임의로 표시하지 않습니다.</p>
+    `;
+    host.querySelector('[data-role="teacher-question-enabled"]').addEventListener("change", async (event) => {
+      event.target.disabled = true;
+      try {
+        await updateTeacherQuestionSetting(event.target.checked);
+        showToast("교사 질문 기능 설정을 저장했습니다.", "success");
+      } catch (error) {
+        event.target.checked = !event.target.checked;
+        showToast(error.message, "error");
+      } finally {
+        event.target.disabled = false;
+      }
+    });
+    host.querySelector('[data-role="save-system-settings"]').addEventListener("click", async () => {
+      const value = host.querySelector('[data-role="monthly-limit"]').value;
+      await updateSystemSettings({ monthlyLimit: value === "" ? null : Number(value) });
+      showToast("관리자 설정을 저장했습니다.", "success");
+    });
+    host.querySelector('[data-role="open-billing"]').addEventListener("click", () => {
+      if (!window.confirm("OpenAI 공식 결제 관리 페이지를 새 탭에서 여시겠습니까?")) return;
+      window.open(settings.billingUrl, "_blank", "noopener,noreferrer");
+    });
+  } catch (error) {
+    host.innerHTML = `<div class="compile-log" data-tone="warn">${escapeHtml(error.message)}</div>`;
+  }
 }
 
 function renderPasswordForm(message = "") {
@@ -36,7 +87,7 @@ function renderPasswordForm(message = "") {
     <form class="admin-password-form" data-role="admin-password-form">
       <label>
         <span>관리자 비밀번호</span>
-        <input data-role="admin-password" type="password" placeholder="초기 비밀번호 1234" autocomplete="current-password" />
+        <input data-role="admin-password" type="password" placeholder="서버 관리자 비밀번호" autocomplete="current-password" />
       </label>
       <button class="btn primary" type="submit">관리자 설정 열기</button>
       <div class="compile-log ${message ? "" : "hidden"}" data-role="admin-status" data-tone="warn">${escapeHtml(message)}</div>
@@ -163,3 +214,5 @@ function escapeHtml(value = "") {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+import { loadSystemSettings, updateSystemSettings, updateTeacherQuestionSetting } from "../../core/settingsService.js";
+import { showToast } from "../../core/editorUtils.js";

@@ -5,6 +5,7 @@ import { curriculum } from "../arduino/arduino.js";
 import { robotArm2DLessons } from "../robotarm/2d/lessonData.js";
 import { robotArm3DLessons } from "../robotarm/3d/lessonData.js";
 import { mecanumLessons } from "../mecanum/mecanumData.js";
+import { isAdmin } from "../../core/accessControl.js";
 
 const EMPTY_DATA = {
   source: "empty",
@@ -41,13 +42,19 @@ export async function loadTeacherData() {
     };
   }
 
-  if (!runtime || !profile) {
-    return buildFallbackTeacherData(getFirebaseStatus().configured
-      ? "Firebase 로그인 정보를 확인할 수 없어 localStorage fallback 데이터를 표시합니다."
-      : "Firebase 설정이 없어 localStorage fallback 데이터를 표시합니다.");
+  if (runtime && !profile) {
+    return {
+      ...EMPTY_DATA,
+      source: "denied",
+      statusMessage: "Firebase 로그인 프로필을 확인할 수 없습니다. 운영 데이터 대신 빈 상태를 표시합니다."
+    };
   }
 
-  if (profile.role !== "teacher") {
+  if (!runtime) {
+    return buildFallbackTeacherData("Firebase 미설정 개발 환경의 로컬 임시 데이터입니다. 실제 학생 데이터가 아닙니다.");
+  }
+
+  if (profile.role !== "teacher" && !isAdmin(profile)) {
     return {
       ...EMPTY_DATA,
       source: "denied",

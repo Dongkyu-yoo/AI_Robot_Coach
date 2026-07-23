@@ -7,6 +7,7 @@ import {
   hideProfileSetupPage,
   showProfileSetupPage
 } from "../modules/auth/profileSetupPage.js";
+import { getDisplayRole, isAdmin, isTeacherOrAdmin } from "./accessControl.js";
 
 let authCallbacks = {
   onLogin: () => {},
@@ -31,7 +32,6 @@ export function initializeAuth(callbacks = {}) {
   bindGoogleLogin();
   bindProfileSetup();
   bindLogout();
-  bindRoleButtons();
   restoreFirebaseUserSession();
 }
 
@@ -117,18 +117,6 @@ function bindLogout() {
   });
 }
 
-function bindRoleButtons() {
-  document.querySelectorAll(".role-toggle [data-role]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const user = storage.getUser();
-      document.getElementById("saveStatus").textContent = user.authProvider === "firebase"
-        ? "역할은 Firestore profiles에서 관리됩니다."
-        : "임시 로그인은 학생 권한으로만 실행됩니다.";
-      updateAuthUI(user);
-    });
-  });
-}
-
 function restoreFirebaseUserSession() {
   restoreFirebaseSession()
     .then((result) => {
@@ -189,12 +177,11 @@ function getExternalBrowserGuide() {
 }
 
 function hydrateLoginForm(user) {
-  document.getElementById("nameInput").value = user.name || "학생";
-  document.getElementById("idInput").value = user.id || "10101";
+  document.getElementById("nameInput").value = user.loggedIn ? (user.name || "") : "";
+  document.getElementById("idInput").value = user.loggedIn ? (user.id || "") : "";
   const roleInput = document.getElementById("roleInput");
   if (roleInput) {
     roleInput.value = "student";
-    roleInput.disabled = true;
   }
 }
 
@@ -203,7 +190,13 @@ function updateAuthUI(user) {
   document.getElementById("loginScreen").classList.toggle("hidden", loggedIn);
   document.getElementById("appScreen").classList.toggle("hidden", !loggedIn);
   document.getElementById("userName").textContent = `${user.school ? `${user.school} · ` : ""}${user.name || "학생"} (${user.id || "00000"})`;
-  document.getElementById("userRole").textContent = user.role === "teacher" ? "교사" : "학생";
-  document.getElementById("studentToggle").classList.toggle("active", user.role !== "teacher");
-  document.getElementById("teacherToggle").classList.toggle("active", user.role === "teacher");
+  const roleLabel = getDisplayRole(user);
+  document.getElementById("userRole").textContent = roleLabel;
+  document.getElementById("currentRoleBadge").textContent = roleLabel;
+  document.querySelectorAll('[data-access="teacher"]').forEach((item) => {
+    item.classList.toggle("hidden", !isTeacherOrAdmin(user));
+  });
+  document.querySelectorAll('[data-access="admin"]').forEach((item) => {
+    item.classList.toggle("hidden", !isAdmin(user));
+  });
 }

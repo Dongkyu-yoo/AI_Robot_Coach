@@ -6,6 +6,7 @@ import { robotArm2DLessons } from "../robotarm/2d/lessonData.js";
 import { robotArm3DLessons } from "../robotarm/3d/lessonData.js";
 import { mecanumLessons } from "../mecanum/mecanumData.js";
 import { getEngineeringNotes, mergeCloudNotesToLocal } from "../engineeringNote/noteStorage.js";
+import { mountStudentMessages, renderStudentMessages } from "../student/studentMessages.js";
 
 const NOTE_TARGET_COUNT = 10;
 let notesSyncedUserId = "";
@@ -25,9 +26,22 @@ export function renderDashboard() {
   const progress = getDashboardProgress();
   const modules = buildDashboardProgress({ notes, progress });
   const overallProgress = average(modules.map((item) => item.progressPercent));
+  const latest = Object.values(progress)
+    .sort((a, b) => new Date(b.updatedAt || b.time || 0) - new Date(a.updatedAt || a.time || 0))[0];
 
   return `
     <div class="grid">
+      <article class="card span-12 continue-learning">
+        <h2>이어서 학습하기</h2>
+        ${latest ? `
+          <p><b>${latest.label || latest.moduleId || "최근 학습"}</b></p>
+          <p class="muted">최근 Lesson: ${latest.lessonId || "확인 중"} · 현재 진행률 ${latest.percent || 0}%</p>
+          <button class="btn primary" data-page-link="${latest.moduleId || "arduino"}" type="button">이어서 학습하기</button>
+        ` : `
+          <p class="muted">아직 저장된 학습 기록이 없습니다. 아두이노 첫 레슨부터 시작해보세요.</p>
+          <button class="btn primary" data-page-link="arduino" type="button">첫 학습 시작하기</button>
+        `}
+      </article>
       <article class="card span-12">
         <h2>오늘의 학습</h2>
         <p class="muted">각 실습실의 미션 완료와 엔지니어링 노트 작성 상태를 진행률로 확인합니다.</p>
@@ -46,6 +60,7 @@ export function renderDashboard() {
         <div class="metric small">${questions.length} / ${notes.length}</div>
         <p class="muted">현재 로그인한 계정의 AI 질문 수와 엔지니어링 노트 작성 횟수입니다.</p>
       </article>
+      ${renderStudentMessages()}
     </div>
   `;
 }
@@ -63,6 +78,7 @@ export function mountDashboard(root, { router }) {
   syncDashboardNotes(router);
   syncDashboardQuestions(router);
   syncDashboardProgress(router);
+  mountStudentMessages(root);
 }
 
 function syncDashboardNotes(router) {

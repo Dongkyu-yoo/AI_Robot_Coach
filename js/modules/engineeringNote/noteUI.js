@@ -308,8 +308,11 @@ function renderTopicOptions(selectedTopic) {
 
 function renderAttachments(attachments = []) {
   return attachments.length
-    ? attachments.map((file) => `<span>${escapeHtml(file.name)} <small>${escapeHtml(file.type)}</small></span>`).join("")
-    : `<span class="muted">첨부 파일 없음</span>`;
+    ? `
+      <div class="notice subtle">첨부 파일 정보 기록입니다. 실제 파일은 업로드되지 않아 다른 기기에서 열 수 없습니다.</div>
+      ${attachments.map((file) => `<span>${escapeHtml(file.name)} <small>${escapeHtml(file.type)}</small></span>`).join("")}
+    `
+    : `<span class="muted">첨부 파일 정보 없음</span>`;
 }
 
 function getPreviewText(note) {

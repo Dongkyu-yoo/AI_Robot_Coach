@@ -77,10 +77,10 @@ export function saveEngineeringNote(noteData) {
         cloudNotesCache = synced;
       }
       else storage.saveNotes(synced);
-      setSaveStatus("클라우드 저장됨");
+      setSaveStatus("클라우드 저장 완료");
     })
     .catch((error) => {
-      setSaveStatus(user.authProvider === "firebase" ? "클라우드 저장 실패" : "로컬 저장됨");
+      setSaveStatus(user.authProvider === "firebase" ? "동기화 실패" : "로컬 임시 저장");
       console.warn("노트 Firebase 저장 실패.", error);
     });
 

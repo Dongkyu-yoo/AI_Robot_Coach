@@ -15,36 +15,83 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.role == "teacher";
     }
 
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == "ghost8965@gmail.com";
+    }
+
+    function isTeacherOrAdmin() {
+      return isTeacher() || isAdmin();
+    }
+
     match /profiles/{uid} {
-      allow read: if isOwner(uid) || isTeacher();
+      allow read: if isOwner(uid) || isTeacherOrAdmin();
       allow create: if isOwner(uid)
         && request.resource.data.role == "student";
       allow update: if isOwner(uid)
-        && request.resource.data.role == resource.data.role;
+        && request.resource.data.role == resource.data.role
+        || isAdmin();
       allow delete: if false;
     }
 
     match /engineeringNotes/{noteId} {
-      allow read: if isOwner(resource.data.userId) || isTeacher();
+      allow read: if isOwner(resource.data.userId) || isTeacherOrAdmin();
       allow create: if isOwner(request.resource.data.userId);
       allow update, delete: if isOwner(resource.data.userId);
     }
 
     match /aiQuestions/{questionId} {
-      allow read: if isOwner(resource.data.userId) || isTeacher();
+      allow read: if isOwner(resource.data.userId) || isTeacherOrAdmin();
       allow create: if isOwner(request.resource.data.userId);
       allow update, delete: if false;
     }
 
     match /progress/{progressId} {
-      allow read: if isOwner(resource.data.userId) || isTeacher();
+      allow read: if isOwner(resource.data.userId) || isTeacherOrAdmin();
       allow create: if isOwner(request.resource.data.userId);
       allow update, delete: if isOwner(resource.data.userId);
     }
 
     match /pdfSubmissions/{userId} {
-      allow read: if isOwner(userId) || isTeacher();
+      allow read: if isOwner(userId) || isTeacherOrAdmin();
       allow create, update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    match /teacherQuestions/{questionId} {
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == "unread"
+        && request.resource.data.teacherAnswer == null;
+      allow read: if isOwner(resource.data.userId) || isTeacherOrAdmin();
+      allow update: if isTeacherOrAdmin()
+        || (isOwner(resource.data.userId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(["updatedAt"]));
+      allow delete: if false;
+    }
+
+    match /studentFeedback/{feedbackId} {
+      allow read: if isOwner(resource.data.studentId) || isTeacherOrAdmin();
+      allow create: if isTeacherOrAdmin()
+        && request.resource.data.teacherId == request.auth.uid;
+      allow update: if (isOwner(resource.data.studentId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(["isRead", "updatedAt"])
+          && request.resource.data.isRead == true)
+        || isAdmin()
+        || (isTeacher()
+          && resource.data.teacherId == request.auth.uid
+          && request.resource.data.teacherId == resource.data.teacherId
+          && request.resource.data.studentId == resource.data.studentId);
+      allow delete: if isAdmin()
+        || (isTeacher() && resource.data.teacherId == request.auth.uid);
+    }
+
+    match /systemSettings/{settingId} {
+      allow read: if signedIn();
+      allow create, update: if isAdmin();
       allow delete: if false;
     }
   }

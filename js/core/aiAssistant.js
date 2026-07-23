@@ -22,12 +22,12 @@ export const aiAssistant = {
       }
 
       if (normalized.includes("오류") || normalized.includes("안돼") || normalized.includes("안 돼")) {
-        return "먼저 전류가 D13에서 출발해 저항, LED 긴 다리와 짧은 다리, GND까지 이어지는 길을 손가락으로 따라가 보면 어디에서 끊길 가능성이 있나요? 코드에서는 13번 핀에 HIGH를 보내고 있는데 LED가 꺼져 있다면, 회로 문제와 코드 문제 중 어떤 가설을 먼저 시험해보고 싶나요? 한 가지를 바꿔 보기 전에 예상 결과를 적고, 바꾼 뒤 실제 결과가 어떻게 달랐는지도 비교해보세요.";
+        return buildDeviceFallback(lessonData);
       }
       if (normalized.includes("저항") || normalized.includes("220")) {
         return "저항은 LED에 흐르는 전류를 줄이는 역할을 합니다. 만약 저항이 없다면 LED 밝기나 부품 안전에 어떤 일이 생길 것이라고 예상하나요? 실제 회로에서 저항이 LED와 직렬로 들어가 있는지 전류의 길을 따라 확인해보고, 확인 전 예상과 확인 후 결과를 한 줄로 적어보세요.";
       }
-      return "좋은 질문입니다. 먼저 코드에서 실제 전기 상태를 바꾸는 줄이 어디인지 찾아볼까요? 그 줄이 회로의 어떤 부품과 연결되는지 짝지어 보고, 만약 LED가 예상과 다르게 반응한다면 핀 번호, LED 방향, GND 연결 중 어떤 것을 먼저 작은 실험으로 확인할지 정해보세요.";
+      return buildDeviceFallback(lessonData);
     }
 
     return "지금 관찰한 현상과 예상한 결과를 나누어 설명해볼까요? 어떤 값을 바꾸면 결과가 달라질지 먼저 추측해보세요.";
@@ -76,7 +76,7 @@ export const aiAssistant = {
       html: `
         <b>AI 컴파일 결과: 성공</b>
         <br />문법 오류를 찾지 못했습니다. ${lessonData.successMessage}
-        <br />다음 단계로 가상 실행을 눌러 LED 상태를 확인해보세요.
+        <br />다음 단계로 가상 실행을 눌러 ${lessonData.expectedObservation || "장치의 상태"}를 확인해보세요.
       `
     };
   },
@@ -85,6 +85,13 @@ export const aiAssistant = {
     return lessonData.aiHints[0] || "코드와 회로에서 같은 핀 번호를 사용하고 있는지 확인해보세요.";
   }
 };
+
+function buildDeviceFallback(lessonData = {}) {
+  const circuit = lessonData.circuitChecks?.[0] || "회로와 코드의 핀 번호를 비교하세요.";
+  const observation = lessonData.expectedObservation || "미션에서 예상한 현상이 나타나는지 관찰하세요.";
+  const question = lessonData.guidingQuestions?.[0] || "어떤 조건을 한 가지씩 바꾸어 비교할 수 있을까요?";
+  return `1. 현재 확인할 부분: ${circuit} 2. 실제로 관찰할 현상: ${observation} 3. 학생이 생각할 질문: ${question}`;
+}
 
 function detectCommonArduinoMistakes(code, lessonData) {
   const issues = [];

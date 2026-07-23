@@ -2331,3 +2331,110 @@ button:disabled {
     padding: 18px;
   }
 }
+.toast-host {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 3000;
+  display: grid;
+  gap: 8px;
+}
+
+.app-toast {
+  max-width: 420px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #172554;
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .24);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: .18s ease;
+}
+
+.app-toast.show { opacity: 1; transform: translateY(0); }
+.app-toast.success { background: #047857; }
+.app-toast.warn { background: #a16207; }
+.app-toast.error { background: #b91c1c; }
+
+.editor-utility-bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: rgba(255, 255, 255, .96);
+  border: 1px solid #dbeafe;
+  border-bottom: 0;
+}
+
+.editor-dirty-status {
+  color: #475569;
+  font-size: .85rem;
+}
+.editor-dirty-status.dirty { color: #b45309; font-weight: 700; }
+
+.role-badge {
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: #e0e7ff;
+  color: #312e81;
+}
+
+.privacy-notice {
+  padding: 12px 24px;
+  color: #64748b;
+  background: #f8fafc;
+  font-size: .78rem;
+  text-align: center;
+}
+
+.app-dialog {
+  width: min(620px, calc(100vw - 32px));
+  border: 0;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .35);
+}
+.app-dialog::backdrop { background: rgba(15, 23, 42, .58); }
+.app-dialog label { display: grid; gap: 6px; margin: 12px 0; }
+.app-dialog textarea { min-height: 130px; }
+.dialog-actions, .admin-actions, .teacher-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.teacher-question-launcher {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.teacher-operations { margin: 18px 0; }
+.teacher-operation-item {
+  padding: 14px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.teacher-operation-item textarea { width: 100%; min-height: 90px; margin: 8px 0; }
+.teacher-operation-item pre { overflow: auto; max-height: 280px; }
+.teacher-search-row input { flex: 1 1 260px; }
+
+.student-message-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.student-message-grid details {
+  padding: 10px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.student-message-grid details.unread summary { font-weight: 800; color: #1d4ed8; }
+
+@media (max-width: 760px) {
+  .student-message-grid { grid-template-columns: 1fr; }
+}

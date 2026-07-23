@@ -12,6 +12,9 @@ import { renderMecanum, mountMecanum } from "../modules/mecanum/mecanum.js";
 import { renderEngineeringNote, mountEngineeringNote } from "../modules/engineeringNote/engineeringNote.js";
 import { renderTeacher, mountTeacher } from "../modules/teacher/teacher.js";
 import { renderAdmin, mountAdmin } from "../modules/admin/admin.js";
+import { isAdmin, isTeacherOrAdmin } from "./accessControl.js";
+import { mountTeacherQuestionButton } from "./teacherQuestionUI.js";
+import { mountLabEditorUtilities } from "./editorUtils.js";
 
 const routeMeta = {
   dashboard: ["대시보드", "오늘 학습할 모듈을 선택하고 진행 상황을 확인합니다."],
@@ -112,8 +115,13 @@ export const router = {
 
     syncLabSubmenus(currentRoute, currentOptions);
 
-    if ((currentRoute === "teacher" || currentRoute === "admin") && user.role !== "teacher") {
+    if (currentRoute === "teacher" && !isTeacherOrAdmin(user)) {
       pageContent.innerHTML = renderTeacherAccessDenied();
+      history.replaceState(null, "", `#${currentRoute}`);
+      return;
+    }
+    if (currentRoute === "admin" && !isAdmin(user)) {
+      pageContent.innerHTML = renderAdminAccessDenied();
       history.replaceState(null, "", `#${currentRoute}`);
       return;
     }
@@ -121,6 +129,8 @@ export const router = {
     if (module) {
       pageContent.innerHTML = module.render({ router, ...currentOptions });
       module.mount(pageContent, { router, ...currentOptions });
+      mountLabEditorUtilities(pageContent, { route: currentRoute, ...currentOptions });
+      mountTeacherQuestionButton(pageContent, { route: currentRoute, ...currentOptions });
     } else {
       pageContent.innerHTML = renderPlaceholder(title, desc);
     }
@@ -134,6 +144,15 @@ function bindNavigation() {
   document.querySelectorAll("[data-route]").forEach((button) => {
     button.addEventListener("click", () => router.navigate(button.dataset.route));
   });
+}
+
+function renderAdminAccessDenied() {
+  return `
+    <article class="card empty-state">
+      <h2>관리자 권한이 필요합니다</h2>
+      <p class="muted">관리자 설정은 지정된 Firebase 관리자 계정만 접근할 수 있습니다.</p>
+    </article>
+  `;
 }
 
 function renderTeacherAccessDenied() {

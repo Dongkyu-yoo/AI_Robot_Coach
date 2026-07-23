@@ -420,12 +420,31 @@ void loop() {
   const pinMap = rule.pinMap || {};
   const allowedPins = mapPins(lessonData.allowedPins || [], pinMap);
 
+  const device = getDeviceGuidance(lessonData);
+  const referenceExample = lessonData.starterCode;
+  const successCriteria = rule.criteria || [
+    "참고 예제와 다른 미션 조건을 코드에 반영합니다.",
+    "회로와 코드의 핀 번호를 일치시킵니다.",
+    "AI 컴파일과 가상 실행에서 모두 조건을 만족합니다."
+  ];
+  const guidingQuestions = lessonData.practice?.thinking || [
+    "참고 예제에서 바꾸어야 할 조건은 무엇인가요?",
+    `${device.deviceName}에서 실제로 관찰할 현상은 무엇인가요?`,
+    "한 가지 조건만 맞았을 때 무엇이 부족한가요?"
+  ];
+
   return {
     ...lessonData,
     subtitle: replacePins(lessonData.subtitle, pinMap),
     goal: replacePins(lessonData.goal, pinMap),
-    referenceCode: lessonData.starterCode,
+    missionTitle: lessonData.title,
+    missionDescription: rule.prompt,
+    referenceExample,
+    referenceCode: referenceExample,
     starterCode: rule.starterCode,
+    successCriteria,
+    guidingQuestions,
+    ...device,
     successMessage: rule.successMessage || lessonData.successMessage,
     aiHints: [
       `이번 과제는 참고 예제를 그대로 따라 치는 것이 아니라 응용하는 활동입니다. ${rule.prompt} 먼저 참고 예제와 과제 조건에서 달라진 부분을 표시해보세요.`
@@ -447,12 +466,76 @@ void loop() {
     practice: {
       prompt: rule.prompt,
       referenceTitle: rule.referenceTitle || "참고 예제 코드",
-      criteria: rule.criteria || [
-        "참고 예제와 과제의 핀 번호 또는 조건 차이를 먼저 찾습니다.",
-        "편집기에는 과제 해결 코드만 작성합니다.",
-        "AI 컴파일은 과제 조건을 기준으로 확인합니다."
-      ]
+      criteria: successCriteria
     }
+  };
+}
+
+export function evaluateSyntax(code, lessonData) {
+  const issues = [];
+  if ((code.match(/\{/g) || []).length !== (code.match(/\}/g) || []).length) issues.push("중괄호의 개수가 맞지 않습니다.");
+  if (!/\bsetup\s*\(/.test(code)) issues.push("setup() 함수가 필요합니다.");
+  if (!/\bloop\s*\(/.test(code)) issues.push("loop() 함수가 필요합니다.");
+  return { syntaxPassed: issues.length === 0, issues };
+}
+
+export function evaluateMission(code, lessonData) {
+  const active = createPracticeLessonData(lessonData);
+  const issues = (active.codeChecks || []).filter((check) => !check.pattern.test(code)).map((check) => check.message);
+  if (code.trim() === active.starterCode.trim()) issues.unshift("시작 코드를 미션에 맞게 수정해야 합니다.");
+  if (code.trim() === active.referenceExample.trim()) issues.unshift("참고 예제를 그대로 복사하지 말고 미션 조건에 맞게 응용해야 합니다.");
+  return {
+    missionPassed: issues.length === 0,
+    issues,
+    coachingQuestions: issues.length ? active.guidingQuestions : []
+  };
+}
+
+export function evaluateSimulation(code, lessonData) {
+  const mission = evaluateMission(code, lessonData);
+  return {
+    simulationPassed: mission.missionPassed,
+    simulationState: { deviceName: createPracticeLessonData(lessonData).deviceName, ready: mission.missionPassed },
+    issues: mission.issues
+  };
+}
+
+function getDeviceGuidance(lessonData) {
+  const title = `${lessonData.unitTitle || ""} ${lessonData.title || ""}`;
+  if (/서보/.test(title)) return {
+    deviceName: "서보모터",
+    expectedObservation: "서보 축이 미션에서 정한 각도와 순서로 움직입니다.",
+    circuitChecks: ["전원, GND, 신호선과 attach() 핀 번호를 비교하세요."],
+    commonMistakes: ["0~180도 범위를 벗어난 각도", "신호선 핀 불일치"],
+    coachingHints: ["attach()와 write()가 각각 어떤 역할인지 설명해보세요."]
+  };
+  if (/DC모터|주행|모터/.test(title)) return {
+    deviceName: "DC모터",
+    expectedObservation: "모터가 미션에서 정한 방향과 속도로 회전합니다.",
+    circuitChecks: ["모터드라이버 전원과 입력 핀 조합을 확인하세요."],
+    commonMistakes: ["방향 핀 조합 오류", "PWM 핀이 아닌 곳에 analogWrite 사용"],
+    coachingHints: ["좌우 모터의 HIGH/LOW 조합을 표로 비교해보세요."]
+  };
+  if (/초음파|장애물|자율주행/.test(title)) return {
+    deviceName: "초음파센서",
+    expectedObservation: "물체와의 거리에 따라 측정값 또는 주행 상태가 달라집니다.",
+    circuitChecks: ["trig는 OUTPUT, echo는 INPUT인지 확인하세요."],
+    commonMistakes: ["trig/echo 핀 뒤바꿈", "거리 계산식 또는 유효 범위 누락"],
+    coachingHints: ["가까운 물체와 먼 물체에서 pulseIn 값이 어떻게 달라지는지 비교하세요."]
+  };
+  if (/블루투스/.test(title)) return {
+    deviceName: "블루투스 모듈",
+    expectedObservation: "전송한 명령 문자에 따라 연결된 장치의 상태가 달라집니다.",
+    circuitChecks: ["통신 속도와 TX/RX 연결을 확인하세요."],
+    commonMistakes: ["명령 문자 대소문자 불일치", "Serial.begin 속도 불일치"],
+    coachingHints: ["수신한 문자를 먼저 시리얼 모니터에서 확인해보세요."]
+  };
+  return {
+    deviceName: "LED",
+    expectedObservation: "LED가 미션의 순서와 시간에 맞게 켜지고 꺼집니다.",
+    circuitChecks: ["LED 극성, 저항, GND, 코드 핀 번호를 확인하세요."],
+    commonMistakes: ["LED 극성 반대", "핀 번호 불일치"],
+    coachingHints: ["digitalWrite 직전과 직후의 LED 상태를 예상해보세요."]
   };
 }
 
