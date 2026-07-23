@@ -1,0 +1,336 @@
+- generic [active] [ref=e1]:
+  - region "학생 대시보드 화면 예시" [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - text: AI 로봇 코치
+        - generic [ref=e5]: ROBOT LEARNING LAB
+      - generic [ref=e6]:
+        - generic [ref=e7]: 대시보드
+        - generic [ref=e8]: 아두이노 실습실
+        - generic [ref=e9]: 로봇팔 실습실
+        - generic [ref=e10]: 메카넘 실습실
+        - generic [ref=e11]: 엔지니어링 노트
+        - generic [ref=e12]: 교사용 대시보드
+      - generic [ref=e13]:
+        - generic [ref=e14]: 김학생 (10101)
+        - text: 학생 · 학습 기록 자동 저장
+    - main [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - heading "대시보드" [level=1] [ref=e18]
+          - paragraph [ref=e19]: 오늘 학습할 모듈을 선택하고 진행 상황을 확인합니다.
+        - generic [ref=e20]: "현재 역할: 학생"
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - text: 완료 레슨
+          - strong [ref=e23]: "7"
+          - text: 전체 24개 중
+        - generic [ref=e24]:
+          - text: AI 질문
+          - strong [ref=e25]: "12"
+          - text: 생각 기록
+        - generic [ref=e26]:
+          - text: 엔지니어링 노트
+          - strong [ref=e27]: "6"
+          - text: 목표 10회
+        - generic [ref=e28]:
+          - text: 최근 활동
+          - strong [ref=e29]: LED 켜기
+          - text: 오늘 저장됨
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - emphasis [ref=e32]: ARDUINO
+          - heading "아두이노 실습실" [level=3] [ref=e33]
+          - paragraph [ref=e34]: 회로 연결, 코드 작성, AI 컴파일, 가상 실행을 함께 진행합니다.
+          - generic [ref=e35]: 학습 시작
+        - generic [ref=e36]:
+          - emphasis [ref=e37]: ROBOT ARM
+          - heading "로봇팔 실습실" [level=3] [ref=e38]
+          - paragraph [ref=e39]: 2D·3D 좌표와 관절 각도를 실험하며 경로를 설계합니다.
+          - generic [ref=e40]: 학습 시작
+        - generic [ref=e41]:
+          - emphasis [ref=e42]: MECANUM
+          - heading "메카넘 실습실" [level=3] [ref=e43]
+          - paragraph [ref=e44]: 휠 벡터와 주행 방향을 코드와 시뮬레이션으로 확인합니다.
+          - generic [ref=e45]: 학습 시작
+        - generic [ref=e46]:
+          - emphasis [ref=e47]: NOTE
+          - heading "엔지니어링 노트" [level=3] [ref=e48]
+          - paragraph [ref=e49]: 문제, 원인, 해결 방법과 개선 계획을 과정 중심으로 기록합니다.
+          - generic [ref=e50]: 작성하기
+  - region "아두이노 AI 코치 화면 예시" [ref=e51]:
+    - complementary [ref=e52]:
+      - generic [ref=e53]:
+        - text: AI 로봇 코치
+        - generic [ref=e54]: ARDUINO LAB
+      - generic [ref=e55]:
+        - generic [ref=e56]: 대시보드
+        - generic [ref=e57]: 아두이노 실습실
+        - generic [ref=e58]: 1단원 LED
+        - generic [ref=e59]: 2단원 서보모터
+        - generic [ref=e60]: 3단원 DC모터
+        - generic [ref=e61]: 4단원 초음파센서
+        - generic [ref=e62]: 5단원 블루투스
+      - generic [ref=e63]:
+        - generic [ref=e64]: 김학생 (10101)
+        - text: "저장됨: LED 켜기"
+    - main [ref=e65]:
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - heading "아두이노 실습실" [level=1] [ref=e68]
+          - paragraph [ref=e69]: 회로와 코드 조건을 비교하고 가상 실행으로 확인합니다.
+        - generic [ref=e70]: 1단원 LED · Lesson 1
+      - generic [ref=e71]:
+        - heading "오늘의 미션" [level=2] [ref=e72]
+        - paragraph [ref=e73]: D11 핀에 연결한 LED를 켜는 코드를 완성하고, 참고 예제와 달라진 조건을 설명해 보세요.
+      - generic [ref=e74]:
+        - generic [ref=e76]:
+          - generic [ref=e77]:
+            - button "참고 코드" [ref=e78]
+            - button "코드 분석" [ref=e79]
+            - button "AI 컴파일" [ref=e80]
+            - button "가상 실행" [ref=e81]
+          - generic [ref=e82]: "void setup() { pinMode(11, OUTPUT); } void loop() { digitalWrite(11, HIGH); }"
+          - generic [ref=e83]: ✓ 회로의 핀 번호와 코드가 일치합니다. 실제 키트에서 LED 방향도 확인해 보세요.
+        - generic [ref=e84]:
+          - generic [ref=e85]:
+            - heading "가상 시뮬레이션" [level=3] [ref=e86]
+            - generic [ref=e87]: LED ON · D11
+          - generic [ref=e88]:
+            - heading "질문형 AI 코치" [level=3] [ref=e89]
+            - generic [ref=e90]: "AI 코치: 참고 코드와 오늘의 미션에서 달라진 핀 번호는 무엇인가요?학생: LED가 켜지지 않으면 무엇부터 볼까요?"
+            - button "AI 코치에게 질문" [ref=e91]
+  - region "엔지니어링 노트 화면 예시" [ref=e92]:
+    - complementary [ref=e93]:
+      - generic [ref=e94]:
+        - text: AI 로봇 코치
+        - generic [ref=e95]: ENGINEERING NOTE
+      - generic [ref=e96]:
+        - generic [ref=e97]: 대시보드
+        - generic [ref=e98]: 아두이노 실습실
+        - generic [ref=e99]: 로봇팔 실습실
+        - generic [ref=e100]: 메카넘 실습실
+        - generic [ref=e101]: 엔지니어링 노트
+      - generic [ref=e102]:
+        - generic [ref=e103]: 김학생 (10101)
+        - text: 노트 6 / 10회
+    - main [ref=e104]:
+      - generic [ref=e105]:
+        - generic [ref=e106]:
+          - heading "엔지니어링 노트" [level=1] [ref=e107]
+          - paragraph [ref=e108]: 문제 해결 과정을 관찰·원인·해결·성찰 순서로 기록합니다.
+        - generic [ref=e109]: 자동 저장
+      - generic [ref=e110]:
+        - generic [ref=e111]:
+          - heading "내 노트" [level=3] [ref=e112]
+          - button "+ 새 노트" [ref=e113]
+          - generic [ref=e114]: 메카넘 S자 코스2026. 7. 18.
+          - generic [ref=e115]: 로봇팔 물건 옮기기2026. 7. 11.
+          - generic [ref=e116]: 초음파 거리 측정2026. 7. 4.
+        - generic [ref=e117]:
+          - heading "문제 해결 기록" [level=3] [ref=e118]
+          - generic [ref=e119]: 실습 주제 · 메카넘 실습실 - S자 코스
+          - generic [ref=e120]: 오늘의 활동 · 이동 함수를 조합해 컵 사이 경로를 설계했다.
+          - generic [ref=e121]: 발생한 문제 · 두 번째 컵에서 오른쪽 바퀴가 부딪혔다.
+          - generic [ref=e122]: 원인 분석 · 회전 시간을 길게 설정해 경로가 바깥으로 벌어졌다.
+          - generic [ref=e123]: 해결 방법 · 회전 시간을 줄이고 중간 정지 구간을 추가했다.
+          - generic [ref=e124]: 알게 된 점 · 한 번에 완성하기보다 작은 구간씩 검증해야 한다.
+          - generic [ref=e125]:
+            - button "저장" [ref=e126]
+            - button "작성 마감" [ref=e127]
+        - generic [ref=e128]:
+          - heading "AI 노트 코치" [level=3] [ref=e129]
+          - generic [ref=e130]: 결과만 적기보다 처음 예상과 실제 결과가 어떻게 달랐는지 기록해 볼까요? 바꾼 값을 하나씩 적으면 다음 실험의 근거가 됩니다.
+          - generic [ref=e131]: 노트를 더 구체적으로 쓰려면 어떤 내용을 추가해야 할까요?
+          - button "AI 노트 코치에게 질문" [ref=e132]
+          - generic [ref=e133]:
+            - generic [ref=e134]: 관찰한 현상
+            - generic [ref=e135]: 바꾼 값
+            - generic [ref=e136]: 비교 결과
+            - generic [ref=e137]: 다음 실험
+  - region "교사용 대시보드 화면 예시" [ref=e138]:
+    - complementary [ref=e139]:
+      - generic [ref=e140]:
+        - text: AI 로봇 코치
+        - generic [ref=e141]: TEACHER PORTAL
+      - generic [ref=e142]:
+        - generic [ref=e143]: 학생 실습실
+        - generic [ref=e144]: 교사용 대시보드
+        - generic [ref=e145]: 관리자 메뉴
+      - generic [ref=e146]:
+        - generic [ref=e147]: 이교사
+        - text: 운천고등학교 · 교사
+    - main [ref=e148]:
+      - generic [ref=e149]:
+        - generic [ref=e150]:
+          - heading "교사용 대시보드" [level=1] [ref=e151]
+          - paragraph [ref=e152]: 학생 질문과 엔지니어링 노트를 수업 흐름에 맞춰 확인합니다.
+        - generic [ref=e153]: Firebase 클라우드 데이터
+      - generic [ref=e154]:
+        - navigation [ref=e155]:
+          - generic [ref=e156]: 대시보드
+          - generic [ref=e157]: 학생 관리
+          - generic [ref=e158]: 교사 질문
+          - generic [ref=e159]: AI 질문 기록
+          - generic [ref=e160]: 엔지니어링 노트
+          - generic [ref=e161]: 학생 피드백
+          - generic [ref=e162]: PDF 제출
+          - generic [ref=e163]: 학생 개별 분석
+          - generic [ref=e164]: 전체 학생 분석
+        - generic [ref=e165]:
+          - generic [ref=e166]:
+            - generic [ref=e167]:
+              - text: 학생 수
+              - strong [ref=e168]: "28"
+              - text: 같은 학교
+            - generic [ref=e169]:
+              - text: 답변 대기
+              - strong [ref=e170]: "3"
+              - text: 교사 질문
+            - generic [ref=e171]:
+              - text: 오늘 AI 질문
+              - strong [ref=e172]: "17"
+              - text: 질문 기록
+            - generic [ref=e173]:
+              - text: PDF 제출
+              - strong [ref=e174]: "21"
+              - text: 최신 제출
+          - generic [ref=e175]:
+            - heading "최근 학생 활동" [level=3] [ref=e176]
+            - table [ref=e177]:
+              - rowgroup [ref=e178]:
+                - row [ref=e179]:
+                  - columnheader "학번" [ref=e180]
+                  - columnheader "이름" [ref=e181]
+                  - columnheader "최근 활동" [ref=e182]
+                  - columnheader "질문" [ref=e183]
+                  - columnheader "노트" [ref=e184]
+                  - columnheader "관리" [ref=e185]
+              - rowgroup [ref=e186]:
+                - row [ref=e187]:
+                  - cell "10101" [ref=e188]
+                  - cell "김학생" [ref=e189]
+                  - cell "메카넘 S자 코스" [ref=e190]
+                  - cell "3" [ref=e191]
+                  - cell "6" [ref=e192]
+                  - cell "상세" [ref=e193]
+                - row [ref=e194]:
+                  - cell "10102" [ref=e195]
+                  - cell "이학생" [ref=e196]
+                  - cell "로봇팔 3D" [ref=e197]
+                  - cell "5" [ref=e198]
+                  - cell "7" [ref=e199]
+                  - cell "상세" [ref=e200]
+                - row [ref=e201]:
+                  - cell "10103" [ref=e202]
+                  - cell "박학생" [ref=e203]
+                  - cell "초음파 거리 측정" [ref=e204]
+                  - cell "2" [ref=e205]
+                  - cell "5" [ref=e206]
+                  - cell "상세" [ref=e207]
+  - region "AI 학습 분석 화면 예시" [ref=e208]:
+    - complementary [ref=e209]:
+      - generic [ref=e210]:
+        - text: AI 로봇 코치
+        - generic [ref=e211]: TEACHER ANALYSIS
+      - generic [ref=e212]:
+        - generic [ref=e213]: 대시보드
+        - generic [ref=e214]: 학생 관리
+        - generic [ref=e215]: AI 질문 기록
+        - generic [ref=e216]: PDF 제출
+        - generic [ref=e217]: 학생 개별 분석
+        - generic [ref=e218]: 전체 학생 분석
+      - generic [ref=e219]:
+        - generic [ref=e220]: 이교사
+        - text: 운천고등학교 · 교사
+    - main [ref=e221]:
+      - generic [ref=e222]:
+        - generic [ref=e223]:
+          - heading "학생 개별 분석" [level=1] [ref=e224]
+          - paragraph [ref=e225]: AI 질문과 엔지니어링 노트를 근거로 다음 피드백을 설계합니다.
+        - generic [ref=e226]: 교사용 AI 분석
+      - generic [ref=e228]:
+        - generic [ref=e229]: 학생 이름 또는 학번 검색
+        - generic [ref=e230]: 10101 · 김학생
+        - button "분석 실행" [ref=e231]
+      - generic [ref=e232]:
+        - heading "AI 학습 상태 분석 결과" [level=3] [ref=e233]
+        - generic [ref=e234]:
+          - heading "1. 강점" [level=4] [ref=e235]
+          - paragraph [ref=e236]: 시뮬레이션 결과를 실제 키트의 동작과 비교하고, 실패 원인을 핀 번호·시간 값·회전 방향으로 구분해 기록합니다.
+        - generic [ref=e237]:
+          - heading "2. 어려움 신호" [level=4] [ref=e238]
+          - paragraph [ref=e239]: 복합 동작에서 여러 값을 동시에 바꾸는 경향이 있어 어떤 변화가 결과에 영향을 주었는지 분리하기 어렵습니다.
+        - generic [ref=e240]:
+          - heading "3. 기록 근거" [level=4] [ref=e241]
+          - list [ref=e242]:
+            - listitem [ref=e243]: 메카넘 S자 코스 노트에서 회전 시간을 줄인 뒤 충돌 위치가 달라졌다고 기록함
+            - listitem [ref=e244]: AI 질문에서 네 바퀴의 방향 조합을 반복적으로 확인함
+        - generic [ref=e245]:
+          - heading "4. 다음 피드백 질문" [level=4] [ref=e246]
+          - paragraph [ref=e247]: “이번에는 한 가지 값만 바꾼다면 무엇을 선택하고, 결과를 어떤 기준으로 비교할까요?”
+  - region "관리자 설정 화면 예시" [ref=e248]:
+    - complementary [ref=e249]:
+      - generic [ref=e250]:
+        - text: AI 로봇 코치
+        - generic [ref=e251]: ADMIN SETTINGS
+      - generic [ref=e252]:
+        - generic [ref=e253]: 학생 실습실
+        - generic [ref=e254]: 교사용 대시보드
+        - generic [ref=e255]: 관리자 메뉴
+      - generic [ref=e256]:
+        - generic [ref=e257]: 관리자
+        - text: 시스템 설정 권한
+    - main [ref=e258]:
+      - generic [ref=e259]:
+        - generic [ref=e260]:
+          - heading "관리자 메뉴" [level=1] [ref=e261]
+          - paragraph [ref=e262]: 교사 질문 기능과 AI 코치, GPT 모델 및 회원 역할을 관리합니다.
+        - generic [ref=e263]: "현재 역할: 관리자"
+      - generic [ref=e264]:
+        - heading "시스템 설정" [level=3] [ref=e265]
+        - generic [ref=e266]:
+          - generic [ref=e267]:
+            - generic [ref=e268]: 교사에게 질문하기
+            - text: 학생 실습실의 교사 질문 버튼
+          - generic [ref=e269]: 켜짐
+        - generic [ref=e270]:
+          - generic [ref=e271]:
+            - generic [ref=e272]: AI 코치 사용하기
+            - text: 학생 실습실의 AI 질문·코칭 기능 전체 사용 여부
+          - generic [ref=e273]: 켜짐
+        - generic [ref=e274]:
+          - generic [ref=e275]:
+            - generic [ref=e276]: GPT 모델
+            - text: 현재 API 키에서 사용할 수 있는 모델을 자동 조회
+          - generic [ref=e277]: gpt-5.1 · 목록 새로고침
+      - generic [ref=e278]:
+        - heading "전체 회원·역할 관리" [level=3] [ref=e279]
+        - generic [ref=e280]:
+          - generic [ref=e281]: 학교, 학번, 이름, 이메일 검색
+          - button "검색" [ref=e282]
+          - button "초기화" [ref=e283]
+        - table [ref=e284]:
+          - rowgroup [ref=e285]:
+            - row [ref=e286]:
+              - columnheader "학교" [ref=e287]
+              - columnheader "학번" [ref=e288]
+              - columnheader "이름" [ref=e289]
+              - columnheader "이메일" [ref=e290]
+              - columnheader "역할" [ref=e291]
+              - columnheader "관리" [ref=e292]
+          - rowgroup [ref=e293]:
+            - row [ref=e294]:
+              - cell "운천고등학교" [ref=e295]
+              - cell "10101" [ref=e296]
+              - cell "김학생" [ref=e297]
+              - cell "student@example.com" [ref=e298]
+              - cell "학생" [ref=e299]
+              - cell "수정" [ref=e300]
+            - row [ref=e301]:
+              - cell "운천고등학교" [ref=e302]
+              - cell "-" [ref=e303]
+              - cell "이교사" [ref=e304]
+              - cell "teacher@example.com" [ref=e305]
+              - cell "교사" [ref=e306]
+              - cell "수정" [ref=e307]
