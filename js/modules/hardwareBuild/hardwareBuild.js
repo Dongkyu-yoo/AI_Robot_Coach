@@ -25,7 +25,7 @@ const buildGuides = {
       ["D8", "베이스 서보 신호선", "좌우 회전"],
       ["D9", "어깨 서보 신호선", "팔 들어 올리기"],
       ["D10", "팔꿈치 서보 신호선", "팔 접기·펴기"],
-      ["5~6V", "서보 외부 전원 +", "Arduino 5V 핀에서 3개를 직접 구동하지 않기"],
+      ["5~6V", "서보 외부 전원 +", "서보 3개 사용 시 안정적인 외부 5~6V 전원 권장"],
       ["GND", "모든 장치의 접지", "Arduino와 외부 전원의 GND를 반드시 공통 연결"]
     ],
     steps: [
@@ -36,7 +36,7 @@ const buildGuides = {
       ["저속 시험", "전원을 켠 뒤 관절을 하나씩 작은 각도로 움직여 간섭과 떨림을 확인합니다."]
     ],
     safetyTitle: "서보 전원 연결 주의",
-    safety: "2셀(2S) 18650 배터리의 전압을 서보모터에 직접 연결하지 마세요. 반드시 5~6V로 낮춰 주는 레귤레이터 또는 BEC를 사용하고, 전원을 연결하기 전에 교사가 극성과 출력 전압을 확인해야 합니다.",
+    safety: "로봇팔은 18650 배터리 2개를 전원으로 사용합니다. SG90을 안정적으로 사용하려면 DC-DC 강압 모듈 또는 BEC를 이용해 5~6V로 낮춰 사용하는 것이 좋습니다. Arduino와 서보모터 전원의 GND를 공통으로 연결하고, 전원을 켜기 전에 극성과 출력 전압을 확인하세요.",
     checklist: [
       "각 서보가 90° 중심 위치에서 조립되었다.",
       "D8·D9·D10 신호선의 관절 위치를 확인했다.",
@@ -142,7 +142,7 @@ export function renderHardwareBuild({ type = "robotarm" } = {}) {
               <button type="button" data-hardware-model-fullscreen>전체 화면</button>
             </div>
           </div>
-          <p class="hardware-model-status" data-hardware-model-status>3D 모델 불러오는 중 · 마우스로 회전하고 휠로 확대할 수 있습니다.</p>
+          <p class="hardware-model-status" data-hardware-model-status>3D 모델 불러오는 중 · 왼쪽 드래그: 회전 · 가운데 드래그: 이동 · 휠: 확대/축소</p>
         </article>
       </section>
 

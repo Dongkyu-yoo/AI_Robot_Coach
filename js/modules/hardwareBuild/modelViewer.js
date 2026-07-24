@@ -28,7 +28,13 @@ export function mountHardwareModelViewer(root, { modelPath, accent = 0x4f46e5 } 
   controls.dampingFactor = 0.07;
   controls.minDistance = 2.2;
   controls.maxDistance = 9;
-  controls.maxPolarAngle = Math.PI * 0.49;
+  controls.minPolarAngle = 0.02;
+  controls.maxPolarAngle = Math.PI - 0.02;
+  controls.enablePan = true;
+  controls.screenSpacePanning = true;
+  controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+  controls.mouseButtons.MIDDLE = THREE.MOUSE.PAN;
+  controls.mouseButtons.RIGHT = THREE.MOUSE.DOLLY;
   controls.target.set(0, 0.15, 0);
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x9aa8c4, 2.15));
@@ -73,7 +79,7 @@ export function mountHardwareModelViewer(root, { modelPath, accent = 0x4f46e5 } 
       });
       scene.add(model);
       if (status) {
-        status.textContent = "3D 모델 준비 완료 · 드래그하여 회전해 보세요.";
+        status.textContent = "3D 모델 준비 완료 · 왼쪽 드래그: 회전 · 가운데 드래그: 이동 · 휠: 확대/축소";
         status.classList.add("is-ready");
       }
     },
@@ -127,6 +133,9 @@ export function mountHardwareModelViewer(root, { modelPath, accent = 0x4f46e5 } 
       return;
     }
     if (model && autoRotate) model.rotation.y += 0.0035;
+    const viewingFromBelow = camera.position.y < controls.target.y - 0.45;
+    floor.visible = !viewingFromBelow;
+    grid.visible = !viewingFromBelow;
     controls.update();
     renderer.render(scene, camera);
     frameId = requestAnimationFrame(animate);
