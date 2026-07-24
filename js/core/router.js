@@ -9,6 +9,7 @@ import {
 } from "../modules/arduino/arduino.js";
 import { renderRobotArm, mountRobotArm } from "../modules/robotarm/robotarm.js";
 import { renderMecanum, mountMecanum } from "../modules/mecanum/mecanum.js";
+import { renderHardwareBuild, mountHardwareBuild } from "../modules/hardwareBuild/hardwareBuild.js";
 import { renderEngineeringNote, mountEngineeringNote } from "../modules/engineeringNote/engineeringNote.js";
 import { renderTeacherPortal, mountTeacherPortal } from "../modules/teacher/teacherPortal.js";
 import { renderAdmin, mountAdmin } from "../modules/admin/admin.js";
@@ -19,11 +20,13 @@ import { mountLabEditorUtilities } from "./editorUtils.js";
 const routeMeta = {
   dashboard: ["대시보드", "오늘 학습할 모듈을 선택하고 진행 상황을 확인합니다."],
   arduino: ["아두이노 실습실", "회로 연결, 코드 작성, AI 컴파일, 가상 실행을 함께 진행합니다."],
-  robotarm: ["로봇팔 실습실", "2D 실습, 3D 실습, 물건 옮기기 콘텐츠를 선택합니다."],
+  robotarm: ["로봇팔 실습실", "하드웨어를 제작하고 2D·3D 로봇팔 제어 실습을 시작합니다."],
+  "robotarm-build": ["로봇팔 하드웨어 제작", "회로도와 3D 모델을 확인하며 3축 로봇팔을 안전하게 조립합니다."],
   "robotarm-2d": ["로봇팔 2D 실습", "코드로 어깨와 팔꿈치 각도를 제어하고 Canvas에서 좌표 변화를 확인합니다."],
   "robotarm-3d": ["로봇팔 3D 실습", "베이스 회전, 어깨, 팔꿈치 각도로 3D 좌표와 경로를 실험합니다."],
   "robotarm-pickup": ["물건 옮기기", "3축 로봇팔과 그리퍼로 물체를 잡아 옮기는 과정을 실습합니다."],
-  mecanum: ["메카넘 실습실", "동작 구현, S자 자율주행, 블루투스 조종 콘텐츠를 선택합니다."],
+  mecanum: ["메카넘 실습실", "하드웨어를 제작하고 메카넘 주행 및 블루투스 제어 실습을 시작합니다."],
+  "mecanum-build": ["메카넘 하드웨어 제작", "회로도와 3D 모델을 확인하며 4륜 메카넘 로봇을 안전하게 조립합니다."],
   "mecanum-motion": ["메카넘 동작 구현하기", "직진, 후진, 평행 이동, 대각선 이동, 제자리 회전 원리를 실습합니다."],
   "mecanum-scourse": ["메카넘 자율주행(S자)", "메카넘 이동 함수를 조합해 S자 코스를 통과하는 순서를 설계합니다."],
   "mecanum-bluetooth": ["메카넘 블루투스 조종", "가상 컨트롤러로 조종을 실험하고 HC-06 명령 코드와 연결합니다."],
@@ -36,8 +39,12 @@ const routeModules = {
   dashboard: { render: renderDashboard, mount: mountDashboard },
   arduino: { render: renderArduino, mount: mountArduino },
   robotarm: {
-    render: (context) => renderRobotArm({ ...context, section: "2d" }),
-    mount: (root, context) => mountRobotArm(root, { ...context, section: "2d" })
+    render: (context) => renderHardwareBuild({ ...context, type: "robotarm" }),
+    mount: (root, context) => mountHardwareBuild(root, { ...context, type: "robotarm" })
+  },
+  "robotarm-build": {
+    render: (context) => renderHardwareBuild({ ...context, type: "robotarm" }),
+    mount: (root, context) => mountHardwareBuild(root, { ...context, type: "robotarm" })
   },
   "robotarm-2d": {
     render: (context) => renderRobotArm({ ...context, section: "2d" }),
@@ -52,8 +59,12 @@ const routeModules = {
     mount: (root, context) => mountRobotArm(root, { ...context, section: "pickup" })
   },
   mecanum: {
-    render: (context) => renderMecanum({ ...context, section: "motion" }),
-    mount: (root, context) => mountMecanum(root, { ...context, section: "motion" })
+    render: (context) => renderHardwareBuild({ ...context, type: "mecanum" }),
+    mount: (root, context) => mountHardwareBuild(root, { ...context, type: "mecanum" })
+  },
+  "mecanum-build": {
+    render: (context) => renderHardwareBuild({ ...context, type: "mecanum" }),
+    mount: (root, context) => mountHardwareBuild(root, { ...context, type: "mecanum" })
   },
   "mecanum-motion": {
     render: (context) => renderMecanum({ ...context, section: "motion" }),

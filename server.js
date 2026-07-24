@@ -24,6 +24,7 @@ const mimeTypes = {
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
+  ".glb": "model/gltf-binary",
   ".svg": "image/svg+xml",
   ".ico": "image/x-icon"
 };

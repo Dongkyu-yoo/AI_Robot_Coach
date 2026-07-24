@@ -9,3 +9,7 @@ node_modules/
 functions/node_modules/
 .DS_Store
 Thumbs.db
+
+# 3D 원본은 로컬 제작 자료로 보관하고, 배포에는 최적화된 *-web.glb만 포함합니다.
+assets/models/**/*.obj
+assets/models/**/*.mtl

@@ -26,7 +26,10 @@
       "start-server.cmd",
       "README.md",
       "FIREBASE_SETUP.md",
-      "FIREBASE_FUNCTIONS_OPENAI.md"
+      "FIREBASE_FUNCTIONS_OPENAI.md",
+      "assets/models/**/*.obj",
+      "assets/models/**/*.mtl",
+      "output/**"
     ],
     "rewrites": [
       {
